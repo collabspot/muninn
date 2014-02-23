@@ -1,6 +1,42 @@
 {% extends "base.html" %}
-{% block header %}Add Agent{% endblock %}
+{% block header %}<h1>Add Agent</h1>{% endblock %}
 {% block content %}
+{% if not agent %}
 <form method="post">
+  <p>
+    <label for="agent_type">Agent Type:</label>
+    <select name="agent_type">
+      {% for name, class in registered_agents.items() %}
+      <option value="{{ class.fully_qualified_name() }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="name">Name:</label>
+    <input type="text" name="name">
+  </p>
+  <p>
+    <label for="sources">Sources:</label>
+    <span>Comma separated list of agent names. Possible values:
+      {% for agent in agents %}
+      {% if agent.can_generate_events %}
+      "<strong>{{ agent.name }}</strong>",
+      {% endif %}
+      {% endfor %}
+    </span><br/>
+    <textarea name="sources"></textarea>
+  </p>
+  <p>
+    <label for="config">Config:</label>
+    <textarea name="config" cols="50" rows="20"></textarea>
+  </p>
+
+  <p>
+    <input type="submit" value="Save">
+  </p>
 </form>
+{% else %}
+<p>Successfully created agent "{{ agent.name }}".</p>
+<p><a href="/agents/all">Go back</a> or <a href="/agents/add">add another one</a>.</p>
+{% endif %}
 {% endblock %}

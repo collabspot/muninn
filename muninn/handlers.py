@@ -1,11 +1,12 @@
 import webapp2
 import jinja2
 import os
+import json
 
 from muninn.agents import Agent, URLFetchAgent, PrintEventsAgent,\
      MailAgent
 from muninn.agents.hipchat import HipchatAgent
-from muninn.models import AgentStore
+from muninn.models import AgentStore, cls_from_name
 
 
 templates = jinja2.Environment(loader=jinja2.FileSystemLoader(
@@ -62,10 +63,38 @@ class AddAgent(BaseHandler):
     def get(self):
         # TODO: don't hard code this dict
         registered_agents = {
-            'URL Fetch Agent': Agent._agent_class_name(URLFetchAgent),
-            'Print Events Agent': Agent._agent_class_name(PrintEventsAgent),
-            'Mail Agent': Agent._agent_class_name(MailAgent)
+            'URL Fetch Agent': URLFetchAgent,
+            'Print Events Agent': PrintEventsAgent,
+            'Mail Agent': MailAgent
         }
+        agents = AgentStore.all()
+        template = templates.get_template('add_agent.html')
+        return self.response.out.write(template.render({
+            'registered_agents': registered_agents,
+            'agents': agents
+        }))
+
+    def post(self):
+        agent_type = self.request.get('agent_type')
+        name = self.request.get('name')
+        sources = self.request.get('sources')
+        config = self.request.get('config')
+        config = json.loads(config)
+        sources = sources.split(',')
+        sources = [s.strip() for s in sources]
+        source_agents = AgentStore.query(
+            AgentStore.name.IN(sources),
+            AgentStore.is_active == True
+        ).fetch()
+        agent_cls = cls_from_name(agent_type)
+        agent = agent_cls.new(name,
+                              source_agents=source_agents,
+                              config=config)
+        template = templates.get_template('add_agent.html')
+        return self.response.out.write(template.render({
+            'agent': agent
+        }))
+
 
 
 app = webapp2.WSGIApplication([
