@@ -3,7 +3,6 @@ from google.appengine.api import urlfetch
 from google.appengine.api import mail
 from muninn.models import AgentStore
 import logging
-from jsonpath_rw import jsonpath, parse
 from jinja2 import Template
 
 # conditions for an agent to run.
@@ -27,7 +26,7 @@ class Agent(object):
             config=config)
 
     @classmethod
-    def run(cls, events, config, last_run):
+    def run(self, events, config, last_run):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued
@@ -60,6 +59,7 @@ class URLFetchAgent(Agent):
 
     def _read_json(self, result, config):
         data = json.loads(result.content)
+        return data
         extract_config = config["extract"]
 
         if type(extract_config) is basestring:
@@ -73,7 +73,8 @@ class URLFetchAgent(Agent):
     def read_xml(self, result, config):
         raise NotImplementedError()
 
-    def run(self, events, config):
+    @classmethod
+    def run(self, events, config, last_run):
         method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
         response_kind = config.get("type", "JSON").upper()
 
@@ -93,7 +94,8 @@ class URLFetchAgent(Agent):
 class PrintEventsAgent(Agent):
     can_generate_events = False
 
-    def run(self, events, config):
+    @classmethod
+    def run(self, events, config, last_run):
         for event in events:
             logging.info(event.data)
 
@@ -101,7 +103,8 @@ class PrintEventsAgent(Agent):
 class MailAgent(Agent):
     can_generate_events = False
 
-    def run(self, events, config):
+    @classmethod
+    def run(self, events, config, last_run):
         template = Template(config.get("template_body"))
         body = template.render(events=events)
         template = Template(config.get("template_subject", "New events"))
@@ -111,4 +114,3 @@ class MailAgent(Agent):
               to=config.get("to", "john@collabspot.com"),
               subject=subject,
               body=body)
-
