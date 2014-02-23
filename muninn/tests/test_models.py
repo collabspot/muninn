@@ -44,6 +44,12 @@ class AgentStoreTestCase(unittest.TestCase):
         events = listening_agent_2.receive_events()
         self.assertEqual(len(events), 0)
 
+    def test_agent_properties(self):
+        agent = TestAgent.new(name='Agent', config={'foo': 'bar'})
+        self.assertEqual(agent.config, {'foo': 'bar'})
+        self.assertTrue(agent.can_receive_events)
+        self.assertTrue(agent.can_generate_events)
+
     def test_agent_sources(self):
         source_agent1 = TestAgent.new(name='Source Agent 1')
         source_agent2 = TestAgent.new(name='Source Agent 2')
@@ -62,11 +68,13 @@ class AgentStoreTestCase(unittest.TestCase):
                                         source_agents=[agent])
         source_agent1.generate_events(1)
         source_agent2.generate_events(2)
+        self.assertFalse(agent.last_run)
         agent.run()
         generated_events = Event.from_agent(agent)
         print generated_events
         self.assertEqual(generated_events[0].data,
                          {'event_data': [1, 2]})
+        self.assertTrue(agent.last_run)
 
 if __name__ == '__main__':
     unittest.main()

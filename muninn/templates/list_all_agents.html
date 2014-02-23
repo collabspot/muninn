@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block header %}<h1>All Agents</h1>{% endblock %}
+{% block content %}
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Last Run</th>
+      <th># of events queued</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for agent in agents %}
+    <tr>
+      <td>{{ agent.name }}</td>
+      <td>{{ agent.last_run }}</td>
+      <td>{{ agent.receive_events()|length }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<div>
+  <a href="/agents/add">Add agent</a>
+</div>
+{% endblock %}

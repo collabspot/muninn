@@ -40,15 +40,19 @@ class Agent(object):
         Returns a list of Agents' fully qualified class names.
         '''
         parsed_agents = []
-        print type(cls)
         for agent in agents:
-            if isinstance(agent, (str, unicode)):
-                parsed_agents.append(agent)
-            elif isinstance(agent, AgentStore):
-                parsed_agents.append(agent.type)
-            elif issubclass(agent, cls):
-                parsed_agents.append(agent.__module__ + '.' + agent.__name__)
+            parsed_agents.append(cls._agent_class_name(agent))
         return parsed_agents
+
+    @classmethod
+    def _agent_class_name(cls, agent):
+        if isinstance(agent, (str, unicode)):
+            return agent
+        elif isinstance(agent, AgentStore):
+            return agent.type
+        elif issubclass(agent, cls):
+            return agent.__module__ + '.' + agent.__name__
+        return None
 
 
 

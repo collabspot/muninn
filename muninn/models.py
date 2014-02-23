@@ -87,13 +87,16 @@ class AgentStore(ndb.Model):
         '''
         Run this agent's logic
         '''
+        if not self.is_active:
+            return
         agent_cls = cls_from_name(self.type)
         events = self.receive_events()
-        new_event_data = agent_cls.run(events,
-                                       self.config,
-                                       self.last_run)
-        self.generate_events(new_event_data)
+        new_events = agent_cls.run(events,
+                                   self.config,
+                                   self.last_run)
+        self.generate_events(new_events)
         self.last_run = datetime.datetime.now()
+        self.put()
         for event in events:
             event.done()
 
