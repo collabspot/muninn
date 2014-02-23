@@ -1,5 +1,10 @@
+import json
+from google.appengine.api import urlfetch
+from google.appengine.api import mail
 from muninn.models import AgentStore
-
+import logging
+from jsonpath_rw import jsonpath, parse
+from jinja2 import Template
 
 # conditions for an agent to run.
 # e.g. if an agent requires ALL_SOURCE_EVENTS, then it can only run
@@ -45,3 +50,65 @@ class Agent(object):
             elif issubclass(agent, cls):
                 parsed_agents.append(agent.__module__ + '.' + agent.__name__)
         return parsed_agents
+
+
+
+class URLFetchAgent(Agent):
+    def _extract_json_data(self, data, expression):
+        jsonpath_expr = parse(expression)
+        return jsonpath_expr.find(data)
+
+    def _read_json(self, result, config):
+        data = json.loads(result.content)
+        extract_config = config["extract"]
+
+        if type(extract_config) is basestring:
+            return self._extract_json_data(data, extract_config)
+        else:
+            tmp_responses = {}
+            for key, expression in extract_config:
+                tmp_responses[key] = self._extract_json_data(data, expression)
+
+
+    def read_xml(self, result, config):
+        raise NotImplementedError()
+
+    def run(self, events, config):
+        method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
+        response_kind = config.get("type", "JSON").upper()
+
+        result = urlfetch.fetch(url=config["url"],
+                                method=method)
+
+        if result.status_code != 200:
+            logging.error('FETCH failed: %s' % result.status_code)
+            return
+
+        if response_kind == "json":
+            return self._read_json(result, config)
+        else:
+            return self._read_xml(result, config)
+
+
+class PrintEventsAgent(Agent):
+    can_generate_events = False
+
+    def run(self, events, config):
+        for event in events:
+            logging.info(event.data)
+
+
+class MailAgent(Agent):
+    can_generate_events = False
+
+    def run(self, events, config):
+        template = Template(config.get("template_body"))
+        body = template.render(events=events)
+        template = Template(config.get("template_subject", "New events"))
+        subject = template.render(events=events)
+
+        mail.send_mail(sender=config.get("sender", "jeremi@collabspot.com"),
+              to=config.get("to", "john@collabspot.com"),
+              subject=subject,
+              body=body)
+
