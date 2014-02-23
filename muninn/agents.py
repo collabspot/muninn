@@ -27,7 +27,7 @@ class Agent(object):
             config=config)
 
     @classmethod
-    def run(cls, data, **kwargs):
+    def run(cls, events, config, last_run):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued

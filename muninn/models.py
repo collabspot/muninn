@@ -53,7 +53,7 @@ class AgentStore(ndb.Model):
             filters.append(cls.name == name)
         return cls.query(*filters).fetch()
 
-    def queue_event(self, event_data):
+    def generate_events(self, event_data):
         '''
         Queue events for each agent listening to this agent.
         If there are no listening agents, no events are queued.
@@ -71,7 +71,7 @@ class AgentStore(ndb.Model):
             events.append(event)
         ndb.put_multi(events)
 
-    def check_events(self, source_agents=None):
+    def receive_events(self, source_agents=None):
         '''
         Get events queued by the agents this agent is listening to
         '''
@@ -82,28 +82,22 @@ class AgentStore(ndb.Model):
             source_agents = SourceAgent.get_source_agents(self)
         return Event.for_agent(self, source_agents)
 
-    def get_events(self, source_agents=None):
-        if not self.can_receive_events:
-            return []
-        if source_agents is None:
-            source_agents = SourceAgent.get_source_agents(self)
-        events = Event.for_agent(self, source_agents)
-
     def run(self):
         '''
         Run this agent's logic
         '''
         agent_cls = cls_from_name(self.type)
-        events = self.check_events()
+        events = self.receive_events()
         try:
-            print events
             new_event_data = agent_cls.run(events,
-                                           config=self.config)
-            self.queue_event(new_event_data)
+                                           self.config,
+                                           self.last_run)
+            self.generate_events(new_event_data)
             self.last_run = datetime.datetime.now()
             for event in events:
                 event.done()
-        except:
+        except Exception, e:
+            print e
             logging.error(str(self) + 'failed')
 
 

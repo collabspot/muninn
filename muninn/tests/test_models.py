@@ -6,24 +6,7 @@ import unittest
 from google.appengine.ext import testbed
 from muninn.models import Event, AgentStore, SourceAgent
 from muninn.agents import Agent
-
-
-class TestAgent(Agent):
-    @classmethod
-    def run(cls, events, **kwargs):
-        print events
-        res = []
-        for event in events:
-            res.append(event.data)
-        return res
-
-
-class MuteAgent(Agent):
-    can_generate_events = False
-
-    @classmethod
-    def run(cls, data):
-        return None
+from muninn.tests.test_agents import TestAgent, MuteAgent
 
 
 class AgentStoreTestCase(unittest.TestCase):
@@ -53,12 +36,12 @@ class AgentStoreTestCase(unittest.TestCase):
                                     source_agents=[source_agent])
         listening_agent_2 = Agent.new(name='Listening Agent 2',
                                       source_agents=None)
-        source_agent.queue_event({'event_field': 'event_value'})
+        source_agent.generate_events({'event_field': 'event_value'})
         self.assertIn(listening_agent,
                       SourceAgent.get_listening_agents(source_agent))
-        events = listening_agent.check_events()
+        events = listening_agent.receive_events()
         self.assertEqual(len(events), 1)
-        events = listening_agent_2.check_events()
+        events = listening_agent_2.receive_events()
         self.assertEqual(len(events), 0)
 
     def test_agent_sources(self):
@@ -77,11 +60,13 @@ class AgentStoreTestCase(unittest.TestCase):
                               source_agents=[source_agent1, source_agent2])
         listening_agent = TestAgent.new(name='Listening Agent',
                                         source_agents=[agent])
-        source_agent1.queue_event(1)
-        source_agent2.queue_event(2)
+        source_agent1.generate_events(1)
+        source_agent2.generate_events(2)
         agent.run()
         generated_events = Event.from_agent(agent)
-        self.assertEqual(generated_events[0].data, [1, 2])
+        print generated_events
+        self.assertEqual(generated_events[0].data,
+                         {'event_data': [1, 2]})
 
 if __name__ == '__main__':
     unittest.main()

@@ -9,9 +9,17 @@ from muninn.agents import Agent, AgentStore
 
 class TestAgent(Agent):
     @classmethod
-    def run(cls, data):
-        print data
+    def run(cls, events, config, last_run):
+        data = [e.data for e in events]
         return {'event_data': data}
+
+
+class MuteAgent(Agent):
+    can_generate_events = False
+
+    @classmethod
+    def run(cls, events, config, last_run):
+        return {'event_data': events}
 
 
 class AgentTestCase(unittest.TestCase):
@@ -30,7 +38,7 @@ class AgentTestCase(unittest.TestCase):
         agent = Agent.new(name=name)
         self.assertEqual(agent.type, 'muninn.agents.Agent')
         agent2 = TestAgent.new(name=name)
-        self.assertEqual(agent2.type, 'tests.test_agents.TestAgent')
+        self.assertEqual(agent2.type, 'muninn.tests.test_agents.TestAgent')
         agents = AgentStore.all(name=name,
                                 type=agent.type)
         self.assertEqual(len(agents), 1)

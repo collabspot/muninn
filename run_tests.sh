@@ -1,1 +1,1 @@
-nosetests --with-gae --without-sandbox --nologcapture tests
+nosetests --with-gae --without-sandbox --nologcapture muninn/tests
