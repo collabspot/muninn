@@ -27,7 +27,7 @@ class Agent(object):
             config=config)
 
     @classmethod
-    def run(cls, events, config, last_run):
+    def run(cls, events, store):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued
@@ -93,7 +93,7 @@ class URLFetchAgent(Agent):
         raise NotImplementedError()
 
     @classmethod
-    def run(cls, events, config, last_run):
+    def run(cls, events, config, store):
         method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
         response_kind = config.get("type", "JSON").upper()
 
@@ -105,9 +105,12 @@ class URLFetchAgent(Agent):
             return
 
         if response_kind == "JSON":
-            return cls._read_json(result, config)
+            new_events = cls._read_json(result, config)
         else:
-            return cls._read_xml(result, config)
+            new_events = cls._read_xml(result, config)
+
+        for event in new_events:
+            store.add_event(event)
 
 
 class PrintEventsAgent(Agent):

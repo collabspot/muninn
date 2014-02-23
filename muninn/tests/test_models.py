@@ -36,7 +36,7 @@ class AgentStoreTestCase(unittest.TestCase):
                                     source_agents=[source_agent])
         listening_agent_2 = Agent.new(name='Listening Agent 2',
                                       source_agents=None)
-        source_agent.generate_events({'event_field': 'event_value'})
+        source_agent._save_events({'event_field': 'event_value'})
         self.assertIn(listening_agent,
                       SourceAgent.get_listening_agents(source_agent))
         events = listening_agent.receive_events()
@@ -66,8 +66,8 @@ class AgentStoreTestCase(unittest.TestCase):
                               source_agents=[source_agent1, source_agent2])
         listening_agent = TestAgent.new(name='Listening Agent',
                                         source_agents=[agent])
-        source_agent1.generate_events(1)
-        source_agent2.generate_events(2)
+        source_agent1._save_events(1)
+        source_agent2._save_events(2)
         self.assertFalse(agent.last_run)
         agent.run()
         generated_events = Event.from_agent(agent)

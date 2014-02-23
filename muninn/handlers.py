@@ -5,6 +5,7 @@ import json
 
 from muninn.agents import Agent, URLFetchAgent, PrintEventsAgent,\
      MailAgent
+from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
 from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore, cls_from_name
 
@@ -19,28 +20,34 @@ class BaseHandler(webapp2.RequestHandler):
 
 class TestAgents(BaseHandler):
     def get(self):
-        urlfetchagent = URLFetchAgent.new(
-            'IP Fetcher',
-            config={
-                'url': 'http://ip.jsontest.com',
-                'extract': {
-                    'ip': '$.ip',
-                    'titi': '$.ip'
-                }
-            })
-
-        printagent = PrintEventsAgent.new(
-            'Print Agent',
-            source_agents=[urlfetchagent])
-
-        #HipchatAgent.new(
-        #    'Hipchat Agent',
+        #urlfetchagent = URLFetchAgent.new(
+        #    'IP Fetcher',
         #    config={
-        #        'token': 'XYZ',
-        #        'template_message': 'The IP is {{ data[0].ip }}',
-        #        'room_id': '122569'
-        #    },
+        #        'url': 'http://ip.jsontest.com',
+        #        'extract': {
+        #            'ip': '$.ip',
+        #            'titi': '$.ip'
+        #        }
+        #    })
+#
+        #printagent = PrintEventsAgent.new(
+        #    'Print Agent',
         #    source_agents=[urlfetchagent])
+#
+        spreadsheet_agent = GoogleSpreadsheetAgent.new("plop", config={
+            'login': '',
+            'password': '',
+            'spreadsheet_key': '0Apa92hFWvHrldGs4akk4b2ZmU2ZZQnhQbVVuRnBqQ2c',
+        })
+
+        HipchatAgent.new(
+            'Hipchat Agent',
+            config={
+                'token': '',
+                'template_message': 'Value of \'a\' is {{ data.a }}',
+                'room_id': '122790'
+            },
+            source_agents=[spreadsheet_agent])
 
 
 class RunAllAgents(BaseHandler):

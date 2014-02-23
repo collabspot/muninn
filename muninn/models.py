@@ -54,23 +54,26 @@ class AgentStore(ndb.Model):
             filters.append(cls.name == name)
         return cls.query(*filters).fetch()
 
-    def generate_events(self, event_data):
+    def _save_events(self):
         '''
         Queue events for each agent listening to this agent.
         If there are no listening agents, no events are queued.
         '''
-        if event_data is None:
-            return
-        if not self.can_generate_events:
-            return
-        listening_agents = SourceAgent.get_listening_agents(self)
         events = []
-        for agent in listening_agents:
-            event = Event(data=event_data,
-                          source=self.key,
-                          target=agent.key)
-            events.append(event)
+        for event_data in self.new_event_cache:
+            if event_data is None:
+                return
+            if not self.can_generate_events:
+                return
+            listening_agents = SourceAgent.get_listening_agents(self)
+
+            for agent in listening_agents:
+                event = Event(data=event_data,
+                              source=self.key,
+                              target=agent.key)
+                events.append(event)
         ndb.put_multi(events)
+        self.new_event_cache = []
 
     def receive_events(self, source_agents=None):
         '''
@@ -83,6 +86,9 @@ class AgentStore(ndb.Model):
             source_agents = SourceAgent.get_source_agents(self)
         return Event.for_agent(self, source_agents)
 
+    def add_event(self, data):
+        self.new_event_cache.append(data)
+
     def run(self):
         '''
         Run this agent's logic
@@ -91,10 +97,11 @@ class AgentStore(ndb.Model):
             return
         agent_cls = cls_from_name(self.type)
         events = self.receive_events()
-        new_events = agent_cls.run(events,
-                                   self.config,
-                                   self.last_run)
-        self.generate_events(new_events)
+        self.new_event_cache = []
+        agent_cls.run(events,
+                       self.config,
+                       self)
+        self._save_events()
         self.last_run = datetime.datetime.now()
         self.put()
         for event in events:
