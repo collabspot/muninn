@@ -4,6 +4,7 @@ import os
 
 from muninn.agents import Agent, URLFetchAgent, PrintEventsAgent,\
      MailAgent
+from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore
 
 
@@ -22,7 +23,7 @@ class TestAgents(BaseHandler):
             config={
                 'url': 'http://ip.jsontest.com',
                 'extract': {
-                    'toto': '$.ip',
+                    'ip': '$.ip',
                     'titi': '$.ip'
                 }
             })
@@ -30,6 +31,15 @@ class TestAgents(BaseHandler):
         printagent = PrintEventsAgent.new(
             'Print Agent',
             source_agents=[urlfetchagent])
+
+        #HipchatAgent.new(
+        #    'Hipchat Agent',
+        #    config={
+        #        'token': 'XYZ',
+        #        'template_message': 'The IP is {{ data[0].ip }}',
+        #        'room_id': '122569'
+        #    },
+        #    source_agents=[urlfetchagent])
 
 
 class RunAllAgents(BaseHandler):
