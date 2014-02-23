@@ -1,4 +1,5 @@
 import json
+import jsonpath
 from google.appengine.api import urlfetch
 from google.appengine.api import mail
 from muninn.models import AgentStore
@@ -58,23 +59,30 @@ class Agent(object):
 
 class URLFetchAgent(Agent):
     @classmethod
-    def _extract_json_data(cls, data, expression):
-        jsonpath_expr = parse(expression)
-        return jsonpath_expr.find(data)
-
-    @classmethod
     def _read_json(cls, result, config):
         data = json.loads(result.content)
-        return data
+        responses = []
+        #return data
         extract_config = config["extract"]
+        logging.info(type(extract_config))
 
-        if type(extract_config) is basestring:
-            return cls._extract_json_data(data, extract_config)
+        if type(extract_config) is unicode:
+            return jsonpath.jsonpath(data, extract_config)
         else:
             tmp_responses = {}
-            for key, expression in extract_config:
-                tmp_responses[key] = cls._extract_json_data(data, expression)
+            for key, expression in extract_config.items():
+                tmp_responses[key] = jsonpath.jsonpath(data, extract_config[key])
 
+            keys = tmp_responses.keys()
+
+
+            if len(keys) > 0 and len(tmp_responses[keys[0]]):
+                for i in range(0, len(tmp_responses[keys[0]])):
+                    response = dict()
+                    for key in keys:
+                        response[key] = tmp_responses[key][i]
+                    responses.append(response)
+            return responses
 
     @classmethod
     def _read_xml(cls, result, config):

@@ -20,7 +20,11 @@ class TestAgents(BaseHandler):
         urlfetchagent = URLFetchAgent.new(
             'IP Fetcher',
             config={
-                'url': 'http://ip.jsontest.com'
+                'url': 'http://ip.jsontest.com',
+                'extract': {
+                    'toto': '$.ip',
+                    'titi': '$.ip'
+                }
             })
 
         printagent = PrintEventsAgent.new(
