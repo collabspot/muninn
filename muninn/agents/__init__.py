@@ -22,7 +22,7 @@ class Agent(object):
             config=config)
 
     @classmethod
-    def run(cls, events, store):
+    def run(cls, events, config, store):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued

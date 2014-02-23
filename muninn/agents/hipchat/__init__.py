@@ -8,11 +8,10 @@ class HipchatAgent(Agent):
     can_generate_events = False
 
     @classmethod
-    def run(cls, events, config, last_run):
+    def run(cls, events, config, store):
         hipster = hipchat.HipChat(token=config.get("token"))
+        template = Template(config.get("template_message"))
 
         for event in events:
-            template = Template(config.get("template_message"))
-            message = template.render(data = event.data)
-
+            message = template.render(data=event.data)
             hipster.message_room(config.get("room_id"), config.get("sender", 'Munnin'), message)

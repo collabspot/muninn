@@ -25,7 +25,6 @@ class URLFetchAgent(Agent):
 
             keys = tmp_responses.keys()
 
-
             if len(keys) > 0 and len(tmp_responses[keys[0]]):
                 for i in range(0, len(tmp_responses[keys[0]])):
                     response = dict()
@@ -63,23 +62,31 @@ class PrintEventsAgent(Agent):
     can_generate_events = False
 
     @classmethod
-    def run(cls, events, config, last_run):
+    def run(cls, events, config, store):
         for event in events:
             logging.info(event.data)
 
 
-class MailAgent(Agent):
+class EmailAgent(Agent):
     can_generate_events = False
 
     @classmethod
-    def run(cls, events, config, last_run):
-        template = Template(config.get("template_body"))
-        body = template.render(events=events)
-        template = Template(config.get("template_subject", "New events"))
-        subject = template.render(events=events)
+    def _send(cls, config, data):
+        body = Template(config.get("template_message")).render(data=data)
+        subject = Template(config.get("template_subject", "New events")).render(data=data)
+        mail.send_mail(sender=config.get("sender", "jeremi@collabspot.com"),
+                       to=config.get("to", "john@collabspot.com"),
+                       subject=subject,
+                       body=body)
 
-        mail.send_mail(
-            sender=config.get("sender", "jeremi@collabspot.com"),
-            to=config.get("to", "john@collabspot.com"),
-            subject=subject,
-            body=body)
+    @classmethod
+    def run(cls, events, config, store):
+        is_digest = config.get("digest", "0") == "1"
+
+        if is_digest:
+            data = [event.data for event in events]
+            cls._send(config, data)
+        else:
+            for event in events:
+                cls._send(config, event.data)
+

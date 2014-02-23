@@ -1,10 +1,11 @@
+import logging
 import webapp2
 import jinja2
 import os
 import json
 
-from muninn.agents import Agent, URLFetchAgent, PrintEventsAgent,\
-     MailAgent
+from muninn.agents import Agent
+from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent
 from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
 from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore, cls_from_name
@@ -37,17 +38,31 @@ class TestAgents(BaseHandler):
         spreadsheet_agent = GoogleSpreadsheetAgent.new("plop", config={
             'login': '',
             'password': '',
-            'spreadsheet_key': '0Apa92hFWvHrldGs4akk4b2ZmU2ZZQnhQbVVuRnBqQ2c',
+            'spreadsheet_key': '0Apa92hFWvHrldGs4akk4b2ZmU2ZZQnhQbVVuRnBqQ2c'
         })
 
-        HipchatAgent.new(
-            'Hipchat Agent',
-            config={
-                'token': '',
-                'template_message': 'Value of \'a\' is {{ data.a }}',
-                'room_id': '122790'
+        #HipchatAgent.new(
+        #    'Hipchat Agent',
+        #    config={
+        #        'token': '',
+        #        'template_message': 'Value of \'a\' is {{ data.a }}',
+        #        'room_id': '122790'
+        #    },
+        #    source_agents=[spreadsheet_agent])
+        EmailAgent.new(
+            'Summary Agent',
+            config = {
+                'to': 'jeremi23@gmail.com',
+                'digest': '1',
+                'template_message': """
+                    Youpi
+                    {% for event in data %}
+                        {{ event.a }} - {{ event.b }}
+                    {% endfor %}
+                """
             },
-            source_agents=[spreadsheet_agent])
+            source_agents=[spreadsheet_agent]
+        )
 
 
 class RunAllAgents(BaseHandler):
@@ -58,7 +73,8 @@ class RunAllAgents(BaseHandler):
             try:
                 self.response.out.write('Running ' + agent.name + '...')
                 agent.run()
-            except:
+            except Exception, e:
+                logging.exception(e)
                 self.response.out.write('Failed. See logs.\n')
             else:
                 self.response.out.write('Done.\n')
@@ -77,7 +93,7 @@ class AddAgent(BaseHandler):
         registered_agents = {
             'URL Fetch Agent': URLFetchAgent,
             'Print Events Agent': PrintEventsAgent,
-            'Mail Agent': MailAgent
+            'Mail Agent': EmailAgent
         }
         agents = AgentStore.all()
         template = templates.get_template('add_agent.html')
