@@ -28,7 +28,8 @@ class AgentStore(ndb.Model):
             name=name,
             type=agent_cls.__module__ + '.' + agent_cls.__name__,
             can_receive_events=agent_cls.can_receive_events,
-            can_generate_events=agent_cls.can_generate_events
+            can_generate_events=agent_cls.can_generate_events,
+            config=config
         )
         agent.put()
         if source_agents:
@@ -88,17 +89,13 @@ class AgentStore(ndb.Model):
         '''
         agent_cls = cls_from_name(self.type)
         events = self.receive_events()
-        try:
-            new_event_data = agent_cls.run(events,
-                                           self.config,
-                                           self.last_run)
-            self.generate_events(new_event_data)
-            self.last_run = datetime.datetime.now()
-            for event in events:
-                event.done()
-        except Exception, e:
-            print e
-            logging.error(str(self) + 'failed')
+        new_event_data = agent_cls.run(events,
+                                       self.config,
+                                       self.last_run)
+        self.generate_events(new_event_data)
+        self.last_run = datetime.datetime.now()
+        for event in events:
+            event.done()
 
 
 class Event(ndb.Model):

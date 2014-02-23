@@ -26,7 +26,7 @@ class Agent(object):
             config=config)
 
     @classmethod
-    def run(self, events, config, last_run):
+    def run(cls, events, config, last_run):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued
@@ -53,28 +53,31 @@ class Agent(object):
 
 
 class URLFetchAgent(Agent):
-    def _extract_json_data(self, data, expression):
+    @classmethod
+    def _extract_json_data(cls, data, expression):
         jsonpath_expr = parse(expression)
         return jsonpath_expr.find(data)
 
-    def _read_json(self, result, config):
+    @classmethod
+    def _read_json(cls, result, config):
         data = json.loads(result.content)
         return data
         extract_config = config["extract"]
 
         if type(extract_config) is basestring:
-            return self._extract_json_data(data, extract_config)
+            return cls._extract_json_data(data, extract_config)
         else:
             tmp_responses = {}
             for key, expression in extract_config:
-                tmp_responses[key] = self._extract_json_data(data, expression)
+                tmp_responses[key] = cls._extract_json_data(data, expression)
 
 
-    def read_xml(self, result, config):
+    @classmethod
+    def _read_xml(cls, result, config):
         raise NotImplementedError()
 
     @classmethod
-    def run(self, events, config, last_run):
+    def run(cls, events, config, last_run):
         method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
         response_kind = config.get("type", "JSON").upper()
 
@@ -85,17 +88,17 @@ class URLFetchAgent(Agent):
             logging.error('FETCH failed: %s' % result.status_code)
             return
 
-        if response_kind == "json":
-            return self._read_json(result, config)
+        if response_kind == "JSON":
+            return cls._read_json(result, config)
         else:
-            return self._read_xml(result, config)
+            return cls._read_xml(result, config)
 
 
 class PrintEventsAgent(Agent):
     can_generate_events = False
 
     @classmethod
-    def run(self, events, config, last_run):
+    def run(cls, events, config, last_run):
         for event in events:
             logging.info(event.data)
 
@@ -104,7 +107,7 @@ class MailAgent(Agent):
     can_generate_events = False
 
     @classmethod
-    def run(self, events, config, last_run):
+    def run(cls, events, config, last_run):
         template = Template(config.get("template_body"))
         body = template.render(events=events)
         template = Template(config.get("template_subject", "New events"))
