@@ -48,8 +48,13 @@ class RunAllAgents(BaseHandler):
         agents = AgentStore.all()
         self.response.content_type = 'text/plain'
         for agent in agents:
-            self.response.out.write('Running ' + agent.name + '\n')
-            agent.run()
+            try:
+                self.response.out.write('Running ' + agent.name + '...')
+                agent.run()
+            except:
+                self.response.out.write('Failed. See logs.\n')
+            else:
+                self.response.out.write('Done.\n')
 
 
 class ListAllAgents(BaseHandler):
