@@ -52,8 +52,12 @@ class Agent(object):
         elif isinstance(agent, AgentStore):
             return agent.type
         elif issubclass(agent, cls):
-            return agent.__module__ + '.' + agent.__name__
+            return agent.fully_qualified_name()
         return None
+
+    @classmethod
+    def fully_qualified_name(cls):
+        return cls.__module__ + '.' + cls.__name__
 
 
 
