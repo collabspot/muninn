@@ -16,6 +16,33 @@ class AgentStore(ndb.Model):
     is_active = ndb.BooleanProperty(default=True)
     last_run = ndb.DateTimeProperty()
     next_run = ndb.DateTimeProperty()
+    config = ndb.JsonProperty()
+    can_receive_events = ndb.BooleanProperty(default=True)
+    can_generate_events = ndb.BooleanProperty(default=True)
+
+    @classmethod
+    def new(cls, name, agent_cls, source_agents=None, config=config):
+        if source_agents is None or not agent_cls.can_receive_events:
+            source_agents = []
+        agent = cls(
+            name=name,
+            type=agent_cls.__module__ + '.' + agent_cls.__name__,
+            can_receive_events=agent_cls.can_receive_events,
+            can_generate_events=agent_cls.can_generate_events
+        )
+        agent.put()
+        if source_agents:
+            source_agent_keys = []
+            for source_agent in source_agents:
+                if not source_agent.can_generate_events:
+                    continue
+                key = SourceAgent(
+                    agent=agent.key,
+                    source=source_agent.key
+                )
+                source_agent_keys.append(key)
+            ndb.put_multi(source_agent_keys)
+        return agent
 
     @classmethod
     def all(cls, type=None, name=None):
@@ -55,30 +82,29 @@ class AgentStore(ndb.Model):
             source_agents = SourceAgent.get_source_agents(self)
         return Event.for_agent(self, source_agents)
 
+    def get_events(self, source_agents=None):
+        if not self.can_receive_events:
+            return []
+        if source_agents is None:
+            source_agents = SourceAgent.get_source_agents(self)
+        events = Event.for_agent(self, source_agents)
+
     def run(self):
         '''
         Run this agent's logic
         '''
         agent_cls = cls_from_name(self.type)
         events = self.check_events()
-        for event in events:
-            try:
-                new_event_data = agent_cls.run(event.data)
-                self.queue_event(new_event_data)
-                self.last_run = datetime.datetime.now()
+        try:
+            print events
+            new_event_data = agent_cls.run(events,
+                                           config=self.config)
+            self.queue_event(new_event_data)
+            self.last_run = datetime.datetime.now()
+            for event in events:
                 event.done()
-            except:
-                logging.error(str(self) + 'failed')
-
-    @property
-    def can_generate_events(self):
-        agent_cls = cls_from_name(self.type)
-        return agent_cls.can_generate_events
-
-    @property
-    def can_receive_events(self):
-        agent_cls = cls_from_name(self.type)
-        return agent_cls.can_receive_events
+        except:
+            logging.error(str(self) + 'failed')
 
 
 class Event(ndb.Model):
@@ -99,6 +125,17 @@ class Event(ndb.Model):
             # so if source_agents is empty, get all events for agent
             source_agents = [s.key for s in source_agents]
             events = events.filter(Event.source.IN(source_agents))
+        return events.fetch(limit=limit)
+
+    @classmethod
+    def for_agent_from_source(cls, agent, source_agent, limit=25):
+        '''
+        Get events for an agent from a single source_agent
+        '''
+        # TODO: paginate?
+        events = Event.query(Event.is_done == False,
+                             Event.target == agent.key,
+                             Event.source == source_agent.key)
         return events.fetch(limit=limit)
 
     @classmethod
@@ -144,54 +181,3 @@ class SourceAgent(ndb.Model):
         keys = [a.source for a in agents]
         return ndb.get_multi(keys)
 
-
-class Agent(object):
-    can_generate_events = True
-    can_receive_events = True
-
-    @classmethod
-    def new(cls, name, source_agents=None):
-        if source_agents is None or not cls.can_receive_events:
-            source_agents = []
-        agent = AgentStore(
-            name=name,
-            type=cls.__module__ + '.' + cls.__name__,
-        )
-        agent.put()
-        if source_agents:
-            source_agent_keys = []
-            for source_agent in source_agents:
-                if not source_agent.can_generate_events:
-                    continue
-                key = SourceAgent(
-                    agent=agent.key,
-                    source=source_agent.key
-                )
-                source_agent_keys.append(key)
-            ndb.put_multi(source_agent_keys)
-        return agent
-
-    @classmethod
-    def run(cls, data):
-        '''
-        Implement logic here for running an agent.
-        Any return values will be used as event data to be queued
-        if the agent's `can_generate_events' is set to True.
-        '''
-        raise NotImplementedError()
-
-    @classmethod
-    def _parse_agents_class_name(cls, agents):
-        '''
-        Returns a list of Agents' fully qualified class names.
-        '''
-        parsed_agents = []
-        print type(cls)
-        for agent in agents:
-            if isinstance(agent, (str, unicode)):
-                parsed_agents.append(agent)
-            elif isinstance(agent, AgentStore):
-                parsed_agents.append(agent.type)
-            elif issubclass(agent, cls):
-                parsed_agents.append(agent.__module__ + '.' + agent.__name__)
-        return parsed_agents

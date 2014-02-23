@@ -4,14 +4,18 @@ import random
 import unittest
 
 from google.appengine.ext import testbed
-from models import Agent, Event, AgentStore, SourceAgent
+from muninn.models import Event, AgentStore, SourceAgent
+from muninn.agents import Agent
 
 
 class TestAgent(Agent):
     @classmethod
-    def run(cls, data):
-        print data
-        return {'event_data': data}
+    def run(cls, events, **kwargs):
+        print events
+        res = []
+        for event in events:
+            res.append(event.data)
+        return res
 
 
 class MuteAgent(Agent):
@@ -20,36 +24,6 @@ class MuteAgent(Agent):
     @classmethod
     def run(cls, data):
         return None
-
-
-class AgentTestCase(unittest.TestCase):
-    '''Tests for Agent model'''
-    def setUp(self):
-        self.testbed = testbed.Testbed()
-        self.testbed.setup_env('muninn')
-        self.testbed.activate()
-        self.testbed.init_datastore_v3_stub()
-
-    def tearDown(self):
-        self.testbed.deactivate()
-
-    def test_create_agent(self):
-        name = 'My Agent'
-        agent = Agent.new(name=name)
-        self.assertIsInstance(agent, AgentStore)
-        self.assertEqual(agent.type, 'models.Agent')
-        agent2 = TestAgent.new(name=name)
-        self.assertEqual(agent2.type, 'tests.test_models.TestAgent')
-        agents = AgentStore.all(name=name,
-                                type=agent.type)
-        self.assertEqual(len(agents), 1)
-        agents = AgentStore.all(name=name)
-        self.assertEqual(len(agents), 2)
-
-    def test_parse_agents_class_name(self):
-        agents = ['Foo', 'Bar', Agent]
-        self.assertEqual(['Foo', 'Bar', 'models.Agent'],
-                         Agent._parse_agents_class_name(agents))
 
 
 class AgentStoreTestCase(unittest.TestCase):
@@ -107,10 +81,7 @@ class AgentStoreTestCase(unittest.TestCase):
         source_agent2.queue_event(2)
         agent.run()
         generated_events = Event.from_agent(agent)
-        self.assertEqual([e.data for e in generated_events],
-                         [{'event_data': 1}, {'event_data': 2}])
-        self.assertEqual([e.target for e in generated_events],
-                         [listening_agent.key, listening_agent.key])
+        self.assertEqual(generated_events[0].data, [1, 2])
 
 if __name__ == '__main__':
     unittest.main()
