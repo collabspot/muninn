@@ -20,6 +20,10 @@ class AgentStore(ndb.Model):
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
 
+    def __init__(self, **kwargs):
+        self._new_events_queue = []
+        return super(AgentStore, self).__init__(**kwargs)
+
     @classmethod
     def new(cls, name, agent_cls, source_agents=None, config=config):
         if source_agents is None or not agent_cls.can_receive_events:
@@ -54,13 +58,12 @@ class AgentStore(ndb.Model):
             filters.append(cls.name == name)
         return cls.query(*filters).fetch()
 
-    def _save_events(self):
+    def _put_events_queue(self):
         '''
-        Queue events for each agent listening to this agent.
-        If there are no listening agents, no events are queued.
+        Save any queued events into the datastore
         '''
         events = []
-        for event_data in self.new_event_cache:
+        for event_data in self._new_events_queue:
             if event_data is None:
                 return
             if not self.can_generate_events:
@@ -73,7 +76,7 @@ class AgentStore(ndb.Model):
                               target=agent.key)
                 events.append(event)
         ndb.put_multi(events)
-        self.new_event_cache = []
+        self._new_events_queue = []
 
     def receive_events(self, source_agents=None):
         '''
@@ -87,7 +90,11 @@ class AgentStore(ndb.Model):
         return Event.for_agent(self, source_agents)
 
     def add_event(self, data):
-        self.new_event_cache.append(data)
+        '''
+        Add an event to this agent's event queue, but don't
+        put it into the datastore yet
+        '''
+        self._new_events_queue.append(data)
 
     def run(self):
         '''
@@ -97,15 +104,13 @@ class AgentStore(ndb.Model):
             return
         agent_cls = cls_from_name(self.type)
         events = self.receive_events()
-        self.new_event_cache = []
-        agent_cls.run(events,
-                       self.config,
-                       self)
-        self._save_events()
+        self._new_events_queue = []
+        result = agent_cls.run(events, self.config, self)
+        if result is not None:
+            self.add_event(result)
+        self._put_events_queue()
         self.last_run = datetime.datetime.now()
         self.put()
-        for event in events:
-            event.done()
 
 
 class Event(ndb.Model):
