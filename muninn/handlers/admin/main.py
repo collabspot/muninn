@@ -35,11 +35,31 @@ class TestAgents(BaseHandler):
         #    'Print Agent',
         #    source_agents=[urlfetchagent])
 #
-        spreadsheet_agent = GoogleSpreadsheetAgent.new("plop", config={
-            'login': '',
-            'password': '',
-            'spreadsheet_key': '0Apa92hFWvHrldGs4akk4b2ZmU2ZZQnhQbVVuRnBqQ2c'
-        })
+        #spreadsheet_agent = GoogleSpreadsheetAgent.new("plop", config={
+        #    'login': '',
+        #    'password': '',
+        #    'spreadsheet_key': '0Apa92hFWvHrldGs4akk4b2ZmU2ZZQnhQbVVuRnBqQ2c'
+        #})
+
+        urlfetchagent = URLFetchAgent.new(
+            'IP Fetcher',
+            config={
+                'url': 'http://xkcd.com',
+                'type': 'html',
+                'extract': {
+                    'url': {
+                        'selector': "#comic img",
+                        'attr': "src"
+                    },
+                    'title': {
+                        'selector': "#comic img",
+                        'attr': "title"
+                    }
+                }
+            })
+        printagent = PrintEventsAgent.new(
+            'Print Agent',
+            source_agents=[urlfetchagent])
 
         #HipchatAgent.new(
         #    'Hipchat Agent',
@@ -49,20 +69,20 @@ class TestAgents(BaseHandler):
         #        'room_id': '122790'
         #    },
         #    source_agents=[spreadsheet_agent])
-        EmailAgent.new(
-            'Summary Agent',
-            config = {
-                'to': 'jeremi23@gmail.com',
-                'digest': '1',
-                'template_message': """
-                    Youpi
-                    {% for event in data %}
-                        {{ event.a }} - {{ event.b }}
-                    {% endfor %}
-                """
-            },
-            source_agents=[spreadsheet_agent]
-        )
+        #EmailAgent.new(
+        #    'Summary Agent',
+        #    config = {
+        #        'to': 'jeremi23@gmail.com',
+        #        'digest': '1',
+        #        'template_message': """
+        #            Youpi
+        #            {% for event in data %}
+        #                {{ event.a }} - {{ event.b }}
+        #            {% endfor %}
+        #        """
+        #    },
+        #    source_agents=[spreadsheet_agent]
+        #)
 
 
 class RunAllAgents(BaseHandler):
