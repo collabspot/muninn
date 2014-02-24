@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import datetime
+import time
 import random
 import unittest
 
@@ -78,6 +79,7 @@ class AgentStoreTestCase(unittest.TestCase):
         self.assertEqual(generated_events[0].data,
                          {'event_data': [1, 2]})
         self.assertTrue(agent.last_run)
+
 
 if __name__ == '__main__':
     unittest.main()

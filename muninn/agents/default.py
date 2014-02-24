@@ -8,8 +8,7 @@ from muninn.agents import Agent
 
 
 class URLFetchAgent(Agent):
-    @classmethod
-    def _read_json(cls, result, config):
+    def _read_json(self, result, config):
         data = json.loads(result.content)
         responses = []
         #return data
@@ -33,12 +32,11 @@ class URLFetchAgent(Agent):
                     responses.append(response)
             return responses
 
-    @classmethod
-    def _read_xml(cls, result, config):
+    def _read_xml(self, result, config):
         raise NotImplementedError()
 
-    @classmethod
-    def run(cls, events, config, store):
+    def run(self, events):
+        config = self.config
         method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
         response_kind = config.get("type", "JSON").upper()
 
@@ -50,19 +48,18 @@ class URLFetchAgent(Agent):
             return
 
         if response_kind == "JSON":
-            new_events = cls._read_json(result, config)
+            new_events = self._read_json(result, config)
         else:
-            new_events = cls._read_xml(result, config)
+            new_events = self._read_xml(result, config)
 
         for event in new_events:
-            store.add_event(event)
+            self.agent.add_event(event)
 
 
 class PrintEventsAgent(Agent):
     can_generate_events = False
 
-    @classmethod
-    def run(cls, events, config, store):
+    def run(self, events):
         for event in events:
             logging.info(event.data)
 
@@ -70,8 +67,7 @@ class PrintEventsAgent(Agent):
 class EmailAgent(Agent):
     can_generate_events = False
 
-    @classmethod
-    def _send(cls, config, data):
+    def _send(self, config, data):
         body = Template(config.get("template_message")).render(data=data)
         subject = Template(config.get("template_subject", "New events")).render(data=data)
         mail.send_mail(sender=config.get("sender", "jeremi@collabspot.com"),
@@ -79,14 +75,13 @@ class EmailAgent(Agent):
                        subject=subject,
                        body=body)
 
-    @classmethod
-    def run(cls, events, config, store):
+    def run(self, events):
+        config = self.config
         is_digest = config.get("digest", "0") == "1"
 
         if is_digest:
             data = [event.data for event in events]
-            cls._send(config, data)
+            self._send(config, data)
         else:
             for event in events:
-                cls._send(config, event.data)
-
+                self._send(config, event.data)

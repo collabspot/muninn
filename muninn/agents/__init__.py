@@ -11,18 +11,20 @@ NO_SOURCE_EVENTS = 3
 class Agent(object):
     can_generate_events = True
     can_receive_events = True
-    default_config = {}
+
+    def __init__(self, agent):
+        self.agent = agent
+        self.config = agent.config or {}
 
     @classmethod
     def new(cls, name, config=None, source_agents=None):
         if config is None:
-            config = cls.default_config
+            config = {}
         return AgentStore.new(
             name, cls, source_agents=source_agents,
             config=config)
 
-    @classmethod
-    def run(cls, events, config, store):
+    def run(self, events):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued

@@ -8,8 +8,7 @@ from muninn.agents import Agent, AgentStore
 
 
 class TestAgent(Agent):
-    @classmethod
-    def run(cls, events, config, last_run):
+    def run(self, events):
         data = [e.data for e in events]
         return {'event_data': data}
 
@@ -17,8 +16,7 @@ class TestAgent(Agent):
 class MuteAgent(Agent):
     can_generate_events = False
 
-    @classmethod
-    def run(cls, events, config, last_run):
+    def run(self, events):
         return {'event_data': events}
 
 

@@ -7,8 +7,8 @@ import hipchat
 class HipchatAgent(Agent):
     can_generate_events = False
 
-    @classmethod
-    def run(cls, events, config, store):
+    def run(self, events):
+        config = self.config
         hipster = hipchat.HipChat(token=config.get("token"))
         template = Template(config.get("template_message"))
 

@@ -19,6 +19,7 @@ class AgentStore(ndb.Model):
     config = ndb.JsonProperty()
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
+    is_running = ndb.BooleanProperty(default=False)
 
     def __init__(self, **kwargs):
         self._new_events_queue = []
@@ -57,6 +58,15 @@ class AgentStore(ndb.Model):
         if name is not None:
             filters.append(cls.name == name)
         return cls.query(*filters).fetch()
+
+    @classmethod
+    def due(cls, time):
+        agents = cls.query(
+            cls.next_run <= time,
+            cls.is_running == False,
+            cls.is_active == True
+        ).fetch()
+        return agents
 
     def _put_events_queue(self):
         '''
@@ -102,14 +112,18 @@ class AgentStore(ndb.Model):
         '''
         if not self.is_active:
             return
+        self.is_running = True
+        self.put()
         agent_cls = cls_from_name(self.type)
         events = self.receive_events()
         self._new_events_queue = []
-        result = agent_cls.run(events, self.config, self)
+        agent = agent_cls(self)
+        result = agent.run(events)
         if result is not None:
             self.add_event(result)
         self._put_events_queue()
         self.last_run = datetime.datetime.now()
+        self.is_running = False
         self.put()
 
 
