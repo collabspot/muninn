@@ -126,8 +126,8 @@ class AddAgent(BaseHandler):
 
 
 app = webapp2.WSGIApplication([
-    ('/agents/test/?', TestAgents),
-    ('/agents/all/run/?', RunAllAgents),
-    ('/agents/all/?', ListAllAgents),
-    ('/agents/add/?', AddAgent),
+    ('/muninn/admin/agents/test/?', TestAgents),
+    ('/muninn/admin/agents/all/run/?', RunAllAgents),
+    ('/muninn/admin/agents/all/?', ListAllAgents),
+    ('/muninn/admin/agents/add/?', AddAgent),
 ], debug=True)

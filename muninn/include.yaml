@@ -1,0 +1,4 @@
+handlers:
+- url: /muninn/admin/.*
+  script: muninn.admin.handlers.app
+  login: admin
