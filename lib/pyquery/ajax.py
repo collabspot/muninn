@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-from .pyquery import PyQuery as Base
-from .pyquery import no_default
-
 from webob import Request
 from webob import Response
+
+from pyquery import PyQuery as Base
+from pyquery import no_default
+
 
 try:
     from restkit.contrib.wsgi_proxy import HostProxy

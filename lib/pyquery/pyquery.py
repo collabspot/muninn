@@ -3,25 +3,25 @@
 # Copyright (C) 2008 - Olivier Lauzanne <olauzanne@gmail.com>
 #
 # Distributed under the BSD license, see LICENSE.txt
-from .cssselectpatch import JQueryTranslator
-from .openers import url_opener
 from copy import deepcopy
-from lxml import etree
-import lxml.html
 import inspect
 import types
 import sys
+
+from lxml import etree
+import lxml.html
+
+from cssselectpatch import JQueryTranslator
+from openers import url_opener
 
 
 PY3k = sys.version_info >= (3,)
 
 if PY3k:
-    from urllib.parse import urlencode
     from urllib.parse import urljoin
     basestring = (str, bytes)
     unicode = str
 else:
-    from urllib import urlencode  # NOQA
     from urlparse import urljoin  # NOQA
 
 

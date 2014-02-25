@@ -1,4 +1,4 @@
 handlers:
 - url: /muninn/admin/.*
-  script: muninn.admin.handlers.app
+  script: muninn.handlers.admin.main.app
   login: admin

@@ -1,7 +1,9 @@
-import logging
+from lib import add_lib_path
+add_lib_path()
+
 from jinja2 import Template
-from muninn.agents import Agent
 import hipchat
+from muninn.agents import Agent
 
 
 class HipchatAgent(Agent):

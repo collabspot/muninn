@@ -1,5 +1,9 @@
-from muninn.agents import Agent
+from lib import add_lib_path
+add_lib_path()
+
 import gspread
+from muninn.agents import Agent
+
 
 
 class GoogleSpreadsheetAgent(Agent):

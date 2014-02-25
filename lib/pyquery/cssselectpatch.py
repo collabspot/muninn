@@ -4,8 +4,8 @@
 #
 # Distributed under the BSD license, see LICENSE.txt
 from __future__ import unicode_literals
-from cssselect import xpath as cssselect_xpath
 from cssselect.xpath import ExpressionError
+from cssselect import xpath as cssselect_xpath
 
 XPathExprOrig = cssselect_xpath.XPathExpr
 
@@ -51,7 +51,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_first_pseudo(self, xpath):
         """Matches the first selected element::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><p class="first"></p><p></p></div>')
             >>> d('p:first')
             [<p.first>]
@@ -64,7 +64,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_last_pseudo(self, xpath):
         """Matches the last selected element::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><p></p><p class="last"></p></div>')
             >>> d('p:last')
             [<p.last>]
@@ -77,7 +77,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_even_pseudo(self, xpath):
         """Matches even elements, zero-indexed::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><p></p><p class="last"></p></div>')
             >>> d('p:even')
             [<p>]
@@ -91,7 +91,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_odd_pseudo(self, xpath):
         """Matches odd elements, zero-indexed::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><p></p><p class="last"></p></div>')
             >>> d('p:odd')
             [<p.last>]
@@ -104,7 +104,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_checked_pseudo(self, xpath):
         """Matches odd elements, zero-indexed::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input checked="checked"/></div>')
             >>> d('input:checked')
             [<input>]
@@ -117,7 +117,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_selected_pseudo(self, xpath):
         """Matches all elements that are selected::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<select><option selected="selected"/></select>')
             >>> d('option:selected')
             [<option>]
@@ -130,7 +130,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_disabled_pseudo(self, xpath):
         """Matches all elements that are disabled::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input disabled="disabled"/></div>')
             >>> d('input:disabled')
             [<input>]
@@ -143,7 +143,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_enabled_pseudo(self, xpath):
         """Matches all elements that are enabled::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input value="foo" /></div>')
             >>> d('input:enabled')
             [<input>]
@@ -156,7 +156,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_file_pseudo(self, xpath):
         """Matches all input elements of type file::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="file"/></div>')
             >>> d('input:file')
             [<input>]
@@ -169,7 +169,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_input_pseudo(self, xpath):
         """Matches all input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery(('<div><input type="file"/>'
             ...              '<textarea></textarea></div>'))
             >>> d(':input')
@@ -185,7 +185,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_button_pseudo(self, xpath):
         """Matches all button input elements and the button element::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery(('<div><input type="button"/>'
             ...              '<button></button></div>'))
             >>> d(':button')
@@ -201,7 +201,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_radio_pseudo(self, xpath):
         """Matches all radio input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="radio"/></div>')
             >>> d('input:radio')
             [<input>]
@@ -214,7 +214,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_text_pseudo(self, xpath):
         """Matches all text input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="text"/></div>')
             >>> d('input:text')
             [<input>]
@@ -227,7 +227,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_checkbox_pseudo(self, xpath):
         """Matches all checkbox input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="checkbox"/></div>')
             >>> d('input:checkbox')
             [<input>]
@@ -240,7 +240,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_password_pseudo(self, xpath):
         """Matches all password input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="password"/></div>')
             >>> d('input:password')
             [<input>]
@@ -253,7 +253,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_submit_pseudo(self, xpath):
         """Matches all submit input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="submit"/></div>')
             >>> d('input:submit')
             [<input>]
@@ -266,7 +266,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_hidden_pseudo(self, xpath):
         """Matches all hidden input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="hidden"/></div>')
             >>> d('input:hidden')
             [<input>]
@@ -279,7 +279,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_image_pseudo(self, xpath):
         """Matches all image input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="image"/></div>')
             >>> d('input:image')
             [<input>]
@@ -292,7 +292,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_reset_pseudo(self, xpath):
         """Matches all reset input elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><input type="reset"/></div>')
             >>> d('input:reset')
             [<input>]
@@ -305,7 +305,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_header_pseudo(self, xpath):
         """Matches all header elelements (h1, ..., h6)::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1>title</h1></div>')
             >>> d(':header')
             [<h1>]
@@ -321,7 +321,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_parent_pseudo(self, xpath):
         """Match all elements that contain other elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1><span>title</span></h1><h1/></div>')
             >>> d('h1:parent')
             [<h1>]
@@ -334,7 +334,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_empty_pseudo(self, xpath):
         """Match all elements that do not contain other elements::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1><span>title</span></h1><h2/></div>')
             >>> d(':empty')
             [<span>, <h2>]
@@ -347,7 +347,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_eq_function(self, xpath, function):
         """Matches a single element by its index::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1 class="first"/><h1 class="last"/></div>')
             >>> d('h1:eq(0)')
             [<h1.first>]
@@ -367,7 +367,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_gt_function(self, xpath, function):
         """Matches all elements with an index over the given one::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1 class="first"/><h1 class="last"/></div>')
             >>> d('h1:gt(0)')
             [<h1.last>]
@@ -385,7 +385,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_lt_function(self, xpath, function):
         """Matches all elements with an index below the given one::
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1 class="first"/><h1 class="last"/></div>')
             >>> d('h1:lt(1)')
             [<h1.first>]
@@ -404,7 +404,7 @@ class JQueryTranslator(cssselect_xpath.HTMLTranslator):
     def xpath_contains_function(self, xpath, function):
         """Matches all elements that contain the given text
 
-            >>> from pyquery import PyQuery
+            >>> from lib.pyquery import PyQuery
             >>> d = PyQuery('<div><h1/><h1 class="title">title</h1></div>')
             >>> d(':contains("title")')
             [<h1.title>]

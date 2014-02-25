@@ -15,7 +15,7 @@
 import sys
 import re
 
-from cssselect.parser import parse, parse_series, SelectorError
+from parser import parse, parse_series, SelectorError
 
 
 if sys.version_info[0] < 3:

@@ -13,9 +13,7 @@
 
 """
 
-from cssselect.parser import (parse, Selector, FunctionalPseudoElement,
-                              SelectorError, SelectorSyntaxError)
-from cssselect.xpath import GenericTranslator, HTMLTranslator, ExpressionError
+from xpath import GenericTranslator, HTMLTranslator, ExpressionError
 
 
 VERSION = '0.9.1'

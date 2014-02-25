@@ -1,13 +1,11 @@
 import logging
-import webapp2
-import jinja2
 import os
 import json
 
-from muninn.agents import Agent
+import webapp2
+import jinja2
+
 from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent
-from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
-from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore, cls_from_name
 
 
@@ -142,8 +140,6 @@ class AddAgent(BaseHandler):
         return self.response.out.write(template.render({
             'agent': agent
         }))
-
-
 
 app = webapp2.WSGIApplication([
     ('/muninn/admin/agents/test/?', TestAgents),

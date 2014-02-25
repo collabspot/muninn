@@ -1,9 +1,14 @@
+from lib import add_lib_path
+add_lib_path()
+
 import json
-import jsonpath
 import logging
+
 from jinja2 import Template
 from google.appengine.api import urlfetch
 from google.appengine.api import mail
+
+import jsonpath
 from muninn.agents import Agent
 from pyquery import PyQuery as pq
 

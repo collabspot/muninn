@@ -21,11 +21,12 @@ import sys
 import unittest
 
 from lxml import etree, html
+
 from cssselect import (parse, GenericTranslator, HTMLTranslator,
                        SelectorSyntaxError, ExpressionError)
-from cssselect.parser import (tokenize, parse_series, _unicode,
+from parser import (tokenize, parse_series, _unicode,
                               FunctionalPseudoElement)
-from cssselect.xpath import _unicode_safe_getattr, XPathExpr
+from xpath import _unicode_safe_getattr, XPathExpr
 
 
 if sys.version_info[0] < 3:
