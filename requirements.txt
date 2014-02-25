@@ -1,2 +1,4 @@
 jinja2
 NoseGAE
+lxml
+webapp2
