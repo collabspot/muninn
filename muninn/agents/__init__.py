@@ -13,7 +13,7 @@ class Agent(object):
     can_receive_events = True
 
     def __init__(self, agent):
-        self.agent = agent
+        self.store = agent
         self.config = agent.config or {}
 
     @classmethod

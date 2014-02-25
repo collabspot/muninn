@@ -89,7 +89,7 @@ class URLFetchAgent(Agent):
             new_events = self._read_xml(result, config, parser="html")
 
         for event in new_events:
-            self.agent.add_event(event)
+            self.store.add_event(event)
 
 
 class PrintEventsAgent(Agent):
@@ -112,12 +112,11 @@ class EmailAgent(Agent):
                        body=body)
 
     def run(self, events):
-        config = self.config
-        is_digest = config.get("digest", "0") == "1"
+        is_digest = self.config.get("digest", "0") == "1"
 
         if is_digest:
             data = [event.data for event in events]
-            self._send(config, data)
+            self._send(data)
         else:
             for event in events:
-                self._send(config, event.data)
+                self._send(event.data)
