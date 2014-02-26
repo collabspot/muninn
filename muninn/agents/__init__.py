@@ -32,6 +32,14 @@ class Agent(object):
         '''
         raise NotImplementedError()
 
+    def receive_webhook(self, request, response):
+        '''
+        Implement logic here for running an agent.
+        Any return values will be used as event data to be queued
+        if the agent's `can_generate_events' is set to True.
+        '''
+        raise NotImplementedError()
+
     @classmethod
     def _parse_agents_class_name(cls, agents):
         '''

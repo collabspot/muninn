@@ -114,17 +114,39 @@ class AgentStore(ndb.Model):
             return
         self.is_running = True
         self.put()
-        agent_cls = cls_from_name(self.type)
-        events = self.receive_events()
-        self._new_events_queue = []
-        agent = agent_cls(self)
-        result = agent.run(events)
-        if result is not None:
-            self.add_event(result)
-        self._put_events_queue()
-        self.last_run = datetime.datetime.now()
-        self.is_running = False
+        try:
+            agent_cls = cls_from_name(self.type)
+            events = self.receive_events()
+            self._new_events_queue = []
+            agent = agent_cls(self)
+            result = agent.run(events)
+            if result is not None:
+                self.add_event(result)
+            self._put_events_queue()
+        finally:
+            self.last_run = datetime.datetime.now()
+            self.is_running = False
+            self.put()
+
+    def receive_webhook(self, request, response):
+        '''
+        Run this agent's logic
+        '''
+        if not self.is_active:
+            response.set_status(404)
+            return
+
+        self.is_running = True
         self.put()
+        try:
+            agent_cls = cls_from_name(self.type)
+            self._new_events_queue = []
+            agent = agent_cls(self)
+            agent.receive_webhook(request, response)
+        finally:
+            self.last_run = datetime.datetime.now()
+            self.is_running = False
+            self.put()
 
 
 class Event(ndb.Model):

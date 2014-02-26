@@ -13,10 +13,12 @@ from muninn.agents import Agent
 from pyquery import PyQuery as pq
 
 
-class URLFetchAgent(Agent):
-    def _read_json(self, result, config):
-        data = json.loads(result.content)
+class ReadFormat(object):
+    def _read_json(self, content, config):
+        data = json.loads(content)
         responses = []
+        if not "extract" in config:
+            return data
         extract_config = config["extract"]
 
         if type(extract_config) is unicode:
@@ -37,8 +39,8 @@ class URLFetchAgent(Agent):
             return responses
 
 
-    def _read_xml(cls, result, config, parser="html"):
-        doc = pq(result.content, parser=parser)
+    def _read_xml(cls, content, config, parser="html"):
+        doc = pq(content, parser=parser)
         responses = []
         extract_config = config["extract"]
 
@@ -69,6 +71,8 @@ class URLFetchAgent(Agent):
         return responses
 
 
+class URLFetchAgent(Agent, ReadFormat):
+
     def run(self, events):
         config = self.config
         method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
@@ -82,11 +86,11 @@ class URLFetchAgent(Agent):
             return
 
         if response_kind == "JSON":
-            new_events = self._read_json(result, config)
+            new_events = self._read_json(result.content, config)
         elif response_kind == "XML":
-            new_events = self._read_xml(result, config, parser="xml")
+            new_events = self._read_xml(result.content, config, parser="xml")
         else:
-            new_events = self._read_xml(result, config, parser="html")
+            new_events = self._read_xml(result.content, config, parser="html")
 
         for event in new_events:
             self.store.add_event(event)
@@ -100,10 +104,40 @@ class PrintEventsAgent(Agent):
             logging.info(event.data)
 
 
+class WebhookAgent(Agent, ReadFormat):
+
+    def receive_webhook(self, request, response):
+        config = self.config
+        body = request.body
+
+        kind = config.get("type", "JSON").upper()
+
+        if kind == "JSON":
+            response.content_type = 'application/json'
+            new_events = self._read_json(body, config)
+        elif kind == "XML":
+            response.content_type = 'application/xml'
+            new_events = self._read_xml(body, config, parser="xml")
+        else:
+            raise NotImplementedError()
+
+        for event in new_events:
+            self.store.add_event(event)
+
+        if "response" in config:
+            response.out.write(config["response"])
+        elif kind == "JSON":
+            response.out.write('{"result": "ok"}')
+        elif kind == "XML":
+            response.out.write("<result>ok</result>")
+
+
+
 class EmailAgent(Agent):
     can_generate_events = False
 
-    def _send(self, config, data):
+    def _send(self, data):
+        config = self.config
         body = Template(config.get("template_message")).render(data=data)
         subject = Template(config.get("template_subject", "New events")).render(data=data)
         mail.send_mail(sender=config.get("sender", "jeremi@collabspot.com"),
