@@ -1,4 +1,7 @@
 handlers:
+- url: /static
+  static_dir: static
+
 - url: /muninn/admin/.*
   script: muninn.handlers.admin.main.app
   login: admin
