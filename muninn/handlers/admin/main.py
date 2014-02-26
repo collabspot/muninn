@@ -102,7 +102,7 @@ class ListAllAgents(BaseHandler):
     def get(self):
         agents = AgentStore.all()
         template = templates.get_template('list_all_agents.html')
-        return self.response.out.write(template.render({'agents': agents}))
+        return self.response.out.write(template.render({'agents': agents, 'page_title': 'All Agents'}))
 
 
 class AddAgent(BaseHandler):
@@ -117,7 +117,8 @@ class AddAgent(BaseHandler):
         template = templates.get_template('add_agent.html')
         return self.response.out.write(template.render({
             'registered_agents': registered_agents,
-            'agents': agents
+            'agents': agents,
+            'page_title': 'Add Agent'
         }))
 
     def post(self):
@@ -138,7 +139,8 @@ class AddAgent(BaseHandler):
                               config=config)
         template = templates.get_template('add_agent.html')
         return self.response.out.write(template.render({
-            'agent': agent
+            'agent': agent,
+            'page_title': 'Add Agent'
         }))
 
 app = webapp2.WSGIApplication([
