@@ -28,7 +28,7 @@
   </p>
   <p>
     <label for="config">Config:</label>
-    <textarea name="config" cols="50" rows="20"></textarea>
+    <textarea id="config" name="config" cols="50" rows="20"></textarea>
   </p>
 
   <p>
@@ -39,4 +39,12 @@
 <p>Successfully created agent "{{ agent.name }}".</p>
 <p><a href="/agents/all">Go back</a> or <a href="/agents/add">add another one</a>.</p>
 {% endif %}
+<script>
+  var editor = CodeMirror.fromTextArea(document.getElementById("config"), {
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    mode: "application/ld+json",
+    lineWrapping: true
+  });
+</script>
 {% endblock %}
