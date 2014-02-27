@@ -5,6 +5,7 @@ import random
 import unittest
 
 from google.appengine.ext import testbed
+from google.appengine.api import taskqueue
 from muninn.models import Event, AgentStore, SourceAgent
 from muninn.agents import Agent
 from muninn.tests.test_agents import TestAgent, MuteAgent
@@ -32,10 +33,10 @@ class AgentStoreTestCase(unittest.TestCase):
         self.assertEqual(len(agents), 9)
 
     def test_agent_events(self):
-        source_agent = Agent.new(name='Source Agent')
-        listening_agent = Agent.new(name='Listening Agent',
+        source_agent = Agent.new('Source Agent')
+        listening_agent = Agent.new('Listening Agent',
                                     source_agents=[source_agent])
-        listening_agent_2 = Agent.new(name='Listening Agent 2',
+        listening_agent_2 = Agent.new('Listening Agent 2',
                                       source_agents=None)
         source_agent.add_event({'event_field': 'event_value'})
         source_agent._put_events_queue()
@@ -47,26 +48,45 @@ class AgentStoreTestCase(unittest.TestCase):
         self.assertEqual(len(events), 0)
 
     def test_agent_properties(self):
-        agent = TestAgent.new(name='Agent', config={'foo': 'bar'})
+        agent = TestAgent.new('Agent', config={'foo': 'bar'})
         self.assertEqual(agent.config, {'foo': 'bar'})
         self.assertTrue(agent.can_receive_events)
         self.assertTrue(agent.can_generate_events)
 
     def test_agent_sources(self):
-        source_agent1 = TestAgent.new(name='Source Agent 1')
-        source_agent2 = TestAgent.new(name='Source Agent 2')
-        mute_agent = MuteAgent.new(name='Mute Agent')
-        agent = TestAgent.new(name='Test Agent',
+        source_agent1 = TestAgent.new('Source Agent 1')
+        source_agent2 = TestAgent.new('Source Agent 2')
+        mute_agent = MuteAgent.new('Mute Agent')
+        agent = TestAgent.new('Test Agent',
                               source_agents=[source_agent1, source_agent2, mute_agent])
         self.assertEqual(SourceAgent.get_source_agents(agent),
                          [source_agent1, source_agent2])
 
+    def test_agent_due(self):
+        agent1 = TestAgent.new('Agent 1', schedule=120)
+        agent2 = TestAgent.new('Agent 1', schedule=180)
+        agent3 = TestAgent.new('Agent 1', schedule=500)
+        d1 = datetime.datetime.now() + datetime.timedelta(seconds=180)
+        d2 = datetime.datetime.now() + datetime.timedelta(seconds=499)
+        d3 = datetime.datetime.now() + datetime.timedelta(seconds=500)
+        a1 = AgentStore.due(d1)
+        a2 = AgentStore.due(d2)
+        a3 = AgentStore.due(d3)
+        self.assertEqual(len(a1), 2)
+        self.assertEqual(len(a2), 2)
+        self.assertEqual(len(a3), 3)
+        agent1.is_active = False
+        agent1.put()
+        self.assertEqual(len(AgentStore.due(d3)), 2)
+        agent3.run_taskqueue(queue_name='default')
+        self.assertEqual(len(AgentStore.due(d3)), 1)
+
     def test_agent_run(self):
-        source_agent1 = TestAgent.new(name='Source Agent 1')
-        source_agent2 = TestAgent.new(name='Source Agent 2')
-        agent = TestAgent.new(name='Test Agent',
+        source_agent1 = TestAgent.new('Source Agent 1')
+        source_agent2 = TestAgent.new('Source Agent 2')
+        agent = TestAgent.new('Test Agent',
                               source_agents=[source_agent1, source_agent2])
-        listening_agent = TestAgent.new(name='Listening Agent',
+        listening_agent = TestAgent.new('Listening Agent',
                                         source_agents=[agent])
         source_agent1.add_event(1)
         source_agent2.add_event(2)
@@ -79,6 +99,13 @@ class AgentStoreTestCase(unittest.TestCase):
         self.assertEqual(generated_events[0].data,
                          {'event_data': [1, 2]})
         self.assertTrue(agent.last_run)
+
+    def test_agent_run_taskqueue(self):
+        source_agent1 = TestAgent.new('Source Agent 1')
+        source_agent1.run_taskqueue()
+        queue = taskqueue.Queue(name='agents')
+        stats = queue.fetch_statistics()
+        self.assertEqual(stats.tasks, 1)
 
 
 if __name__ == '__main__':
