@@ -17,14 +17,23 @@ class Agent(object):
         self.config = agent.config or {}
 
     @classmethod
-    def new(cls, name, config=None, source_agents=None):
+    def new(cls, name, schedule=60, config=None, source_agents=None):
         if config is None:
             config = {}
         return AgentStore.new(
-            name, cls, source_agents=source_agents,
+            name, cls, schedule,
+            source_agents=source_agents,
             config=config)
 
     def run(self, events):
+        '''
+        Implement logic here for running an agent.
+        Any return values will be used as event data to be queued
+        if the agent's `can_generate_events' is set to True.
+        '''
+        raise NotImplementedError()
+
+    def receive_webhook(self, request, response):
         '''
         Implement logic here for running an agent.
         Any return values will be used as event data to be queued

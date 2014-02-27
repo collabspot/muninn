@@ -1,55 +1,50 @@
 {% extends "base.html" %}
-
-
+{% block header %}<h1>Add Agent</h1>{% endblock %}
 {% block content %}
-<div class="col-lg-6">
-    {% if not agent %}
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                Agent Details
-            </div>
-            <div class="panel-body">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <form role="form" method="post">
-                            <div class="form-group">
-                                <label>Agent Type</label>
-                                <select name="agent_type" class="form-control">
-                                    {% for name, class in registered_agents.items() %}
-                                        <option value="{{ class.fully_qualified_name() }}">{{ name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Sources</label>
-                                <p class="help-block">Comma separated list of agent names. Possible values:
-                                    {% for agent in agents %}
-                                        {% if agent.can_generate_events %}
-                                            "<strong>{{ agent.name }}</strong>",
-                                        {% endif %}
-                                    {% endfor %}
-                                </p>
-                                <textarea name="sources" class="form-control" rows="3"></textarea>
-                            </div>
-                            <div class="form-group">
-                                <label>Config</label>
-                                <textarea name="config" class="form-control" rows="20"></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                            <a href="/branches" class="btn btn-default">Cancel</a>
-                        </form>
-                    </div>
-                    <!-- /.col-lg-6 (nested) -->
-                </div>
-                <!-- /.row (nested) -->
-            </div>
-            <!-- /.panel-body -->
-        </div>
-        <!-- /.panel -->
-    {% else %}
-        <p>Successfully created agent "{{ agent.name }}".</p>
-        <p><a href="/agents/all">Go back</a> or <a href="/agents/add">add another one</a>.</p>
-    {% endif %}
-</div>
-<!-- /.col-lg-6 -->
+{% if not agent %}
+<form method="post">
+  <p>
+    <label for="agent_type">Agent Type:</label>
+    <select name="agent_type">
+      {% for name, class in registered_agents.items() %}
+      <option value="{{ class.fully_qualified_name() }}">{{ name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+  <p>
+    <label for="name">Name:</label>
+    <input type="text" name="name">
+  </p>
+  <p>
+    <label for="sources">Sources:</label>
+    <span>Comma separated list of agent names. Possible values:
+      {% for agent in agents %}
+      {% if agent.can_generate_events %}
+      "<strong>{{ agent.name }}</strong>",
+      {% endif %}
+      {% endfor %}
+    </span><br/>
+    <textarea name="sources"></textarea>
+  </p>
+  <p>
+    <label for="config">Config:</label>
+    <textarea id="config" name="config" cols="50" rows="20"></textarea>
+  </p>
+
+  <p>
+    <input type="submit" value="Save">
+  </p>
+</form>
+{% else %}
+<p>Successfully created agent "{{ agent.name }}".</p>
+<p><a href="/agents/all">Go back</a> or <a href="/agents/add">add another one</a>.</p>
+{% endif %}
+<script>
+  var editor = CodeMirror.fromTextArea(document.getElementById("config"), {
+    matchBrackets: true,
+    autoCloseBrackets: true,
+    mode: "application/ld+json",
+    lineWrapping: true
+  });
+</script>
 {% endblock %}

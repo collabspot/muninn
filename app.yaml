@@ -4,6 +4,11 @@ runtime: python27
 api_version: 1
 threadsafe: yes
 
+
+handlers:
+- url: /assets/
+  static_dir: assets
+
 includes:
 - muninn/include.yaml
 
@@ -14,6 +19,7 @@ libraries:
   version: latest
 - name: lxml
   version: latest
+
 
 builtins:
 - remote_api: on

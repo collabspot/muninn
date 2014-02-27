@@ -5,3 +5,5 @@ handlers:
 - url: /muninn/admin/.*
   script: muninn.handlers.admin.main.app
   login: admin
+- url: /webhook/.*
+  script: muninn.handlers.webhook.app

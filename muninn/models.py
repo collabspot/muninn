@@ -2,6 +2,7 @@ import datetime
 import logging
 from importlib import import_module
 from google.appengine.ext import ndb
+from google.appengine.api import taskqueue
 
 
 def cls_from_name(name):
@@ -16,6 +17,7 @@ class AgentStore(ndb.Model):
     is_active = ndb.BooleanProperty(default=True)
     last_run = ndb.DateTimeProperty()
     next_run = ndb.DateTimeProperty()
+    schedule = ndb.IntegerProperty()
     config = ndb.JsonProperty()
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
@@ -26,7 +28,7 @@ class AgentStore(ndb.Model):
         return super(AgentStore, self).__init__(**kwargs)
 
     @classmethod
-    def new(cls, name, agent_cls, source_agents=None, config=config):
+    def new(cls, name, agent_cls, schedule, source_agents=None, config=config):
         if source_agents is None or not agent_cls.can_receive_events:
             source_agents = []
         agent = cls(
@@ -34,8 +36,9 @@ class AgentStore(ndb.Model):
             type=agent_cls.__module__ + '.' + agent_cls.__name__,
             can_receive_events=agent_cls.can_receive_events,
             can_generate_events=agent_cls.can_generate_events,
-            config=config
+            config=config, schedule=schedule
         )
+        agent._update_next_run(None)
         agent.put()
         if source_agents:
             source_agent_keys = []
@@ -88,6 +91,12 @@ class AgentStore(ndb.Model):
         ndb.put_multi(events)
         self._new_events_queue = []
 
+    def _update_next_run(self, last_run):
+        seconds = self.schedule
+        if last_run is None:
+            last_run = datetime.datetime.now()
+        self.next_run = last_run + datetime.timedelta(seconds=seconds)
+
     def receive_events(self, source_agents=None):
         '''
         Get events queued by the agents this agent is listening to
@@ -113,18 +122,50 @@ class AgentStore(ndb.Model):
         if not self.is_active:
             return
         self.is_running = True
+        try:
+            agent_cls = cls_from_name(self.type)
+            events = self.receive_events()
+            self._new_events_queue = []
+            agent = agent_cls(self)
+            result = agent.run(events)
+            if result is not None:
+                self.add_event(result)
+            self._put_events_queue()
+        finally:
+            self.last_run = datetime.datetime.now()
+            self.is_running = False
+            self._update_next_run(self.last_run)
+            self.put()
+
+    def receive_webhook(self, request, response):
+        '''
+        Run this agent's logic
+        '''
+        if not self.is_active:
+            response.set_status(404)
+            return
+
+        self.is_running = True
         self.put()
-        agent_cls = cls_from_name(self.type)
-        events = self.receive_events()
-        self._new_events_queue = []
-        agent = agent_cls(self)
-        result = agent.run(events)
-        if result is not None:
-            self.add_event(result)
-        self._put_events_queue()
-        self.last_run = datetime.datetime.now()
-        self.is_running = False
+        try:
+            agent_cls = cls_from_name(self.type)
+            self._new_events_queue = []
+            agent = agent_cls(self)
+            agent.receive_webhook(request, response)
+        finally:
+            self.last_run = datetime.datetime.now()
+            self.is_running = False
+            self.put()
+
+    def run_taskqueue(self, queue_name='agents'):
+        self.is_running = True
         self.put()
+        task = taskqueue.add(
+            url='/cron/agents/%s/run' % self.key.urlsafe(),
+            method='get',
+            queue_name=queue_name
+        )
+        return task
 
 
 class Event(ndb.Model):

@@ -5,7 +5,7 @@ import json
 import webapp2
 import jinja2
 
-from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent
+from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent
 from muninn.models import AgentStore, cls_from_name
 
 
@@ -111,7 +111,8 @@ class AddAgent(BaseHandler):
         registered_agents = {
             'URL Fetch Agent': URLFetchAgent,
             'Print Events Agent': PrintEventsAgent,
-            'Mail Agent': EmailAgent
+            'Mail Agent': EmailAgent,
+            'Webhook Agent': WebhookAgent
         }
         agents = AgentStore.all()
         template = templates.get_template('add_agent.html')
