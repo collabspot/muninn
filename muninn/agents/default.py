@@ -38,7 +38,6 @@ class ReadFormat(object):
                     responses.append(response)
             return responses
 
-
     def _read_xml(cls, content, config, parser="html"):
         doc = pq(content, parser=parser)
         responses = []
@@ -130,7 +129,6 @@ class WebhookAgent(Agent, ReadFormat):
             response.out.write('{"result": "ok"}')
         elif kind == "XML":
             response.out.write("<result>ok</result>")
-
 
 
 class EmailAgent(Agent):
