@@ -5,7 +5,6 @@ import gspread
 from muninn.agents import Agent
 
 
-
 class GoogleSpreadsheetAgent(Agent):
 
     def run(self, events):
