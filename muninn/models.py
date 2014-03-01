@@ -241,4 +241,3 @@ class SourceAgent(ndb.Model):
         ).fetch()
         keys = [a.source for a in agents]
         return ndb.get_multi(keys)
-
