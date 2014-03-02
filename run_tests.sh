@@ -1,2 +1,2 @@
-export PYTHONPATH=$PYTHONPATH:./google_appengine
+#!/bin/sh
 nosetests --with-gae --without-sandbox --nologcapture muninn/tests
