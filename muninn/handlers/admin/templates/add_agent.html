@@ -1,50 +1,65 @@
 {% extends "base.html" %}
-{% block header %}<h1>Add Agent</h1>{% endblock %}
-{% block content %}
-{% if not agent %}
-<form method="post">
-  <p>
-    <label for="agent_type">Agent Type:</label>
-    <select name="agent_type">
-      {% for name, class in registered_agents.items() %}
-      <option value="{{ class.fully_qualified_name() }}">{{ name }}</option>
-      {% endfor %}
-    </select>
-  </p>
-  <p>
-    <label for="name">Name:</label>
-    <input type="text" name="name">
-  </p>
-  <p>
-    <label for="sources">Sources:</label>
-    <span>Comma separated list of agent names. Possible values:
-      {% for agent in agents %}
-      {% if agent.can_generate_events %}
-      "<strong>{{ agent.name }}</strong>",
-      {% endif %}
-      {% endfor %}
-    </span><br/>
-    <textarea name="sources"></textarea>
-  </p>
-  <p>
-    <label for="config">Config:</label>
-    <textarea id="config" name="config" cols="50" rows="20"></textarea>
-  </p>
 
-  <p>
-    <input type="submit" value="Save">
-  </p>
-</form>
-{% else %}
-<p>Successfully created agent "{{ agent.name }}".</p>
-<p><a href="/agents/all">Go back</a> or <a href="/agents/add">add another one</a>.</p>
-{% endif %}
-<script>
-  var editor = CodeMirror.fromTextArea(document.getElementById("config"), {
-    matchBrackets: true,
-    autoCloseBrackets: true,
-    mode: "application/ld+json",
-    lineWrapping: true
-  });
-</script>
+{% block content %}
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="panel panel-default">
+                <div class="panel-heading">Enter Agent Details</div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    {% if not agent %}
+                        <form method="post" role="form">
+                            <div class="form-group">
+                                <label for="agent_type">Agent Type</label>
+                                <select name="agent_type" class="form-control">
+                                    {% for name, class in registered_agents.items() %}
+                                        <option value="{{ class.fully_qualified_name() }}">{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input name="name" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="sources">Sources</label>
+                                <p class="help-block">
+                                    Comma separated list of agent names. Possible values:
+                                    {% for agent in agents %}
+                                        {% if agent.can_generate_events %}
+                                            "<strong>{{ agent.name }}</strong>",
+                                        {% endif %}
+                                    {% endfor %}
+                                </p>
+                                <textarea name="sources" rows="3" class="form-control"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="config">Config</label>
+                                <textarea id="config" name="config" cols="50" rows="20" class="form-control"></textarea>
+                            </div>
+                            <button class="btn btn-default" type="submit">Save</button>
+                        </form>
+                    {% else %}
+                        <p class="text-success">Successfully created agent "{{ agent.name }}".</p>
+                        <p><a href="/muninn/admin/agents/all">Go back</a> or <a href="/muninn/admin/agents/add">add another one</a>.</p>
+                    {% endif %}
+                </div>
+                <!-- /.panel-body -->
+            </div>
+            <!-- /.panel -->
+        </div>
+        <!-- /.col-lg-6 -->
+    </div>
+    <!-- /.row -->
+{% endblock %}
+
+{% block page_level_scripts %}
+    <script>
+        var editor = CodeMirror.fromTextArea(document.getElementById("config"), {
+            matchBrackets: true,
+            autoCloseBrackets: true,
+            mode: "application/ld+json",
+            lineWrapping: true
+        });
+    </script>
 {% endblock %}
