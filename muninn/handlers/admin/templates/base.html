@@ -1,20 +1,170 @@
+<!DOCTYPE html>
 <html>
-  <head>
+
+<head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Muninn</title>
+
+    <!-- Core CSS - Include with every page -->
     <link rel="stylesheet" href="/assets/codemirror/codemirror.css">
+    <link rel="stylesheet" href="/assets/sb-admin/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/assets/sb-admin/font-awesome/css/font-awesome.css">
+
+    <!-- Page-Level Plugin CSS - Blank -->
+    {% block page_level_css %}{% endblock %}
+
+    <!-- SB Admin CSS - Include with every page -->
+    <link href="/assets/sb-admin/css/sb-admin.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+    <div id="wrapper">
+
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".sidebar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="/muninn/admin/agents/all">Muninn</a>
+            </div>
+            <!-- /.navbar-header -->
+
+            <ul class="nav navbar-top-links navbar-right">
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-bell fa-fw"></i>  <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-alerts">
+                        <li>
+                            <a href="#">
+                                <div>
+                                    <i class="fa fa-envelope fa-fw"></i> Message Sent
+                                    <span class="pull-right text-muted small">4 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="#">
+                                <div>
+                                    <i class="fa fa-tasks fa-fw"></i> New Task
+                                    <span class="pull-right text-muted small">4 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a href="#">
+                                <div>
+                                    <i class="fa fa-upload fa-fw"></i> Server Rebooted
+                                    <span class="pull-right text-muted small">4 minutes ago</span>
+                                </div>
+                            </a>
+                        </li>
+                        <li class="divider"></li>
+                        <li>
+                            <a class="text-center" href="#">
+                                <strong>See All Alerts</strong>
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-alerts -->
+                </li>
+                <!-- /.dropdown -->
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                        <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li><a href="#"><i class="fa fa-user fa-fw"></i> User Profile</a>
+                        </li>
+                        <li><a href="#"><i class="fa fa-gear fa-fw"></i> Settings</a>
+                        </li>
+                        <li class="divider"></li>
+                        <li><a href="#"><i class="fa fa-sign-out fa-fw"></i> Logout</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+                <!-- /.dropdown -->
+            </ul>
+            <!-- /.navbar-top-links -->
+
+        </nav>
+        <!-- /.navbar-static-top -->
+
+        <nav class="navbar-default navbar-static-side" role="navigation">
+            <div class="sidebar-collapse">
+                <ul class="nav" id="side-menu">
+                    <li>
+                        <a href="/muninn/admin/agents/all"><i class="fa fa-cogs fa-fw"></i> Agents<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level">
+                            <li>
+                                <a href="/muninn/admin/agents/all">All Agents</a>
+                            </li>
+                            <li>
+                                <a href="/muninn/admin/agents/add">Add Agent</a>
+                            </li>
+                            <li>
+                                <a href="/muninn/admin/agents/test">Test Agents</a>
+                            </li>
+                            <li>
+                                <a href="/muninn/admin/agents/all/run">Run All Agents</a>
+                            </li>
+                        </ul>
+                        <!-- /.nav-second-level -->
+                    </li>
+                </ul>
+                <!-- /#side-menu -->
+            </div>
+            <!-- /.sidebar-collapse -->
+        </nav>
+        <!-- /.navbar-static-side -->
+
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-lg-12">
+                    <h1 class="page-header">{{ page_title }}</h1>
+                    {% block content %}{% endblock %}
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+
+    </div>
+    <!-- /#wrapper -->
+
+    <!-- Core Scripts - Include with every page -->
     <script src="/assets/codemirror/codemirror.js"></script>
     <script src="/assets/codemirror/matchbrackets.js"></script>
     <script src="/assets/codemirror/continuecomment.js"></script>
     <script src="/assets/codemirror/comment.js"></script>
     <script src="/assets/codemirror/javascript.js"></script>
     <script src="/assets/codemirror/python.js"></script>
-  </head>
-  <body>
-    <div>
-      {% block header %}Muninn{% endblock %}
-    </div>
-    <div>
-      {% block content %}{% endblock %}
-    </div>
-  </body>
+    <script src="/assets/sb-admin/js/jquery-1.10.2.js"></script>
+    <script src="/assets/sb-admin/js/bootstrap.min.js"></script>
+    <script src="/assets/sb-admin/js/plugins/metisMenu/jquery.metisMenu.js"></script>
+
+    <!-- Page-Level Plugin Scripts - Blank -->
+    {% block page_level_js %}{% endblock %}
+
+    <!-- SB Admin Scripts - Include with every page -->
+    <script src="/assets/sb-admin/js/sb-admin.js"></script>
+
+    <!-- Page-Level Scripts -->
+    {% block page_level_scripts %}{% endblock %}
+
+</body>
+
 </html>
