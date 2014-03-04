@@ -26,7 +26,7 @@ class AgentStore(ndb.Model):
     #schedule = ndb.IntegerProperty()
     cron_entry = ndb.StringProperty()
     config = ndb.JsonProperty()
-    dedup_hashs = ndb.JsonProperty(compressed=True)
+    dedup_hashs = ndb.JsonProperty()
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
     is_running = ndb.BooleanProperty(default=False)
