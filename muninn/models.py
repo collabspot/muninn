@@ -1,3 +1,6 @@
+from lib import add_lib_path
+add_lib_path()
+
 import datetime
 import hashlib
 import logging
@@ -5,6 +8,7 @@ from importlib import import_module
 from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
 import json
+from crontab import CronTab
 
 
 def cls_from_name(name):
@@ -19,7 +23,8 @@ class AgentStore(ndb.Model):
     is_active = ndb.BooleanProperty(default=True)
     last_run = ndb.DateTimeProperty()
     next_run = ndb.DateTimeProperty()
-    schedule = ndb.IntegerProperty()
+    #schedule = ndb.IntegerProperty()
+    cron_entry = ndb.StringProperty()
     config = ndb.JsonProperty()
     dedup_hashs = ndb.JsonProperty(compressed=True)
     can_receive_events = ndb.BooleanProperty(default=True)
@@ -33,7 +38,7 @@ class AgentStore(ndb.Model):
         return super(AgentStore, self).__init__(**kwargs)
 
     @classmethod
-    def new(cls, name, agent_cls, schedule, source_agents=None, config=config, deduplicate_output_events=False):
+    def new(cls, name, agent_cls, cron_entry=None, source_agents=None, config=config, deduplicate_output_events=False):
         if source_agents is None or not agent_cls.can_receive_events:
             source_agents = []
         agent = cls(
@@ -41,9 +46,11 @@ class AgentStore(ndb.Model):
             type=agent_cls.__module__ + '.' + agent_cls.__name__,
             can_receive_events=agent_cls.can_receive_events,
             can_generate_events=agent_cls.can_generate_events,
-            config=config, schedule=schedule, deduplicate_output_events=deduplicate_output_events
+            config=config,
+            cron_entry=cron_entry,
+            deduplicate_output_events=deduplicate_output_events
         )
-        agent._update_next_run(None)
+        agent._update_next_run()
         if deduplicate_output_events:
             agent.dedup_hashs = []
         agent.put()
@@ -98,8 +105,6 @@ class AgentStore(ndb.Model):
                 logging.info("Event is duplicated, so skipping it")
                 continue
 
-
-            logging.info(listening_agents)
             for agent in listening_agents:
                 event = Event(data=event_data,
                               source=self.key,
@@ -127,12 +132,15 @@ class AgentStore(ndb.Model):
         else:
             self.dedup_hashs.append(ev_hash)
             return False
+    def _update_next_run(self):
+        logging.info("_update_next_run: '%s'" % (self.cron_entry, ))
+        if self.cron_entry is None or len(self.cron_entry) == 0:
+            self.next_run = None
+            return
 
-    def _update_next_run(self, last_run):
-        seconds = self.schedule
-        if last_run is None:
-            last_run = datetime.datetime.now()
-        self.next_run = last_run + datetime.timedelta(seconds=seconds)
+        entry = CronTab(self.cron_entry)
+
+        self.next_run = datetime.datetime.now() + datetime.timedelta(seconds=entry.next())
 
     def receive_events(self, source_agents=None):
         '''
@@ -171,7 +179,7 @@ class AgentStore(ndb.Model):
         finally:
             self.last_run = datetime.datetime.now()
             self.is_running = False
-            self._update_next_run(self.last_run)
+            self._update_next_run()
             self.put()
 
     def receive_webhook(self, request, response):

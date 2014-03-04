@@ -139,6 +139,7 @@ class AddAgent(BaseHandler):
         name = self.request.get('name')
         sources = self.request.get_all('sources')
         config = self.request.get('config')
+        cron = self.request.get('cron')
         deduplicate_output_events = self.request.get('deduplicate_output_events') == "1"
         if not config or len(config) == 0:
             config = "{}"
@@ -149,6 +150,7 @@ class AddAgent(BaseHandler):
         agent = agent_cls.new(name,
                               source_agents=source_agents,
                               config=config,
+                              cron_entry=cron,
                               deduplicate_output_events=deduplicate_output_events)
         template = templates.get_template('add_agent.html')
         return self.response.out.write(template.render({

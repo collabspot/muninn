@@ -15,7 +15,9 @@
                         <tr>
                             <th>ID</th>
                             <th>Name</th>
+                            <th>Cron</th>
                             <th>Last Run</th>
+                            <th>Next Run</th>
                             <th># of Events Queued</th>
                         </tr>
                     </thead>
@@ -24,7 +26,9 @@
                         <tr>
                             <td>{{ agent.key.id() }}</td>
                             <td>{{ agent.name }}</td>
+                            <td>{{ agent.cron_entry }}</td>
                             <td>{{ agent.last_run }}</td>
+                            <td>{{ agent.next_run }}</td>
                             <td>{{ agent.receive_events()|length }}</td>
                         </tr>
                     {% endfor %}

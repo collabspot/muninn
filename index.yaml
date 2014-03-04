@@ -1,0 +1,6 @@
+indexes:
+- kind: AgentStore
+  properties:
+  - name: is_active
+  - name: is_running
+  - name: next_run

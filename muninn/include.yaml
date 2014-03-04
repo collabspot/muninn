@@ -7,3 +7,5 @@ handlers:
   login: admin
 - url: /webhook/.*
   script: muninn.handlers.webhook.app
+- url: /cron/.*
+  script: muninn.handlers.cron.main.app

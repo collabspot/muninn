@@ -20,15 +20,20 @@
                             <div class="form-group">
                                 <label for="name">Name</label>
                                 <input name="name" id="name" class="form-control">
-                                <label for="deduplicate_output_events">De-duplicate output events</label>
-                                <input type="checkbox" name="deduplicate_output_events" id="deduplicate_output_events" class="form-control" value="1">
+                                <label for="cron">Cron</label>
+                                <input name="cron" id="cron" class="form-control">
+                                <div class="checkbox">
+                                    <label><input type="checkbox" name="deduplicate_output_events" class="form-control" value="1">De-duplicate output events</label>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label for="sources">Sources</label>
                                 <p class="help-block">
                                     {% for agent in agents %}
                                         {% if agent.can_generate_events %}
-                                            <input type="checkbox" name="sources" id="sources" class="form-control" value="{{ agent.key.urlsafe() }}">{{ agent.name }}
+                                            <div class="checkbox">
+                                                <label><input type="checkbox" name="sources" id="sources" class="form-control" value="{{ agent.key.urlsafe() }}">{{ agent.name }}</label>
+                                            </div>
                                         {% endif %}
                                     {% endfor %}
                                 </p>
