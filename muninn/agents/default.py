@@ -12,6 +12,8 @@ import jsonpath
 from muninn.agents import Agent
 from pyquery import PyQuery as pq
 
+urlfetch.set_default_fetch_deadline(30)
+
 
 class ReadFormat(object):
     def _read_json(self, content, config):

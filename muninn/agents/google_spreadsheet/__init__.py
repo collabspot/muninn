@@ -1,4 +1,5 @@
 import logging
+from google.appengine.api import urlfetch
 from lib import add_lib_path
 from muninn.utils import slugify, force_unicode
 
@@ -7,6 +8,8 @@ add_lib_path()
 import gspread
 from muninn.agents import Agent
 
+
+urlfetch.set_default_fetch_deadline(30)
 
 class GoogleSpreadsheetAgent(Agent):
     """
