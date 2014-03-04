@@ -1,8 +1,10 @@
 import datetime
+import hashlib
 import logging
 from importlib import import_module
 from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
+import json
 
 
 def cls_from_name(name):
@@ -19,16 +21,19 @@ class AgentStore(ndb.Model):
     next_run = ndb.DateTimeProperty()
     schedule = ndb.IntegerProperty()
     config = ndb.JsonProperty()
+    dedup_hashs = ndb.JsonProperty(compressed=True)
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
     is_running = ndb.BooleanProperty(default=False)
+    deduplicate_output_events = ndb.BooleanProperty(default=False)
+
 
     def __init__(self, **kwargs):
         self._new_events_queue = []
         return super(AgentStore, self).__init__(**kwargs)
 
     @classmethod
-    def new(cls, name, agent_cls, schedule, source_agents=None, config=config):
+    def new(cls, name, agent_cls, schedule, source_agents=None, config=config, deduplicate_output_events=False):
         if source_agents is None or not agent_cls.can_receive_events:
             source_agents = []
         agent = cls(
@@ -36,9 +41,11 @@ class AgentStore(ndb.Model):
             type=agent_cls.__module__ + '.' + agent_cls.__name__,
             can_receive_events=agent_cls.can_receive_events,
             can_generate_events=agent_cls.can_generate_events,
-            config=config, schedule=schedule
+            config=config, schedule=schedule, deduplicate_output_events=deduplicate_output_events
         )
         agent._update_next_run(None)
+        if deduplicate_output_events:
+            agent.dedup_hashs = []
         agent.put()
         if source_agents:
             source_agent_keys = []
@@ -76,20 +83,50 @@ class AgentStore(ndb.Model):
         Save any queued events into the datastore
         '''
         events = []
+
+        if not self.can_generate_events:
+            logging.info("Cannot generate events, so cancel saving them")
+            return
+        listening_agents = SourceAgent.get_listening_agents(self)
+
         for event_data in self._new_events_queue:
             if event_data is None:
-                return
-            if not self.can_generate_events:
-                return
-            listening_agents = SourceAgent.get_listening_agents(self)
+                logging.info("empty event")
+                continue
 
+            if self.deduplicate_output_events and self._deduplicate_events(event_data):
+                logging.info("Event is duplicated, so skipping it")
+                continue
+
+
+            logging.info(listening_agents)
             for agent in listening_agents:
                 event = Event(data=event_data,
                               source=self.key,
                               target=agent.key)
                 events.append(event)
         ndb.put_multi(events)
+
+        if self.deduplicate_output_events and len(events):
+            #making sure we save the hashes
+            self.put()
+
         self._new_events_queue = []
+
+    def _get_event_hash(self, event_data):
+        return hashlib.md5(json.dumps(event_data, sort_keys=True)).hexdigest()
+
+    def _deduplicate_events(self, event_data):
+        ev_hash = self._get_event_hash(event_data)
+
+        #todo: remove this
+        self.dedup_hashs = self.dedup_hashs or []
+
+        if ev_hash in self.dedup_hashs:
+            return True
+        else:
+            self.dedup_hashs.append(ev_hash)
+            return False
 
     def _update_next_run(self, last_run):
         seconds = self.schedule
@@ -175,7 +212,7 @@ class Event(ndb.Model):
     is_done = ndb.BooleanProperty(default=False)
 
     @classmethod
-    def for_agent(cls, agent, source_agents, limit=25):
+    def for_agent(cls, agent, source_agents, limit=2000):
         '''
         Get events for an agent from a list of source_agents
         '''

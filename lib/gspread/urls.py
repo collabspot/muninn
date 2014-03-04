@@ -10,7 +10,7 @@ This module is Google API url patterns storage.
 
 import re
 
-from exceptions import UnsupportedFeedTypeError, UrlParameterMissing
+from .exceptions import UnsupportedFeedTypeError, UrlParameterMissing
 
 
 SPREADSHEETS_SERVER = 'spreadsheets.google.com'

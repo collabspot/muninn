@@ -1,11 +1,13 @@
 import logging
 import os
 import json
+from google.appengine.ext import ndb
 
 import webapp2
 import jinja2
 
 from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent
+from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
 from muninn.models import AgentStore, cls_from_name
 
 
@@ -89,6 +91,7 @@ class RunAllAgents(BaseHandler):
         self.response.content_type = 'text/plain'
         for agent in agents:
             try:
+                logging.info('Running %s (%s) ...' % (agent.name, agent.key.id()))
                 self.response.out.write('Running ' + agent.name + '...')
                 agent.run()
             except Exception, e:
@@ -104,6 +107,14 @@ class ListAllAgents(BaseHandler):
         template = templates.get_template('list_all_agents.html')
         return self.response.out.write(template.render({'agents': agents, 'page_title': 'All Agents'}))
 
+class ResetDedupHandler(BaseHandler):
+    def get(self):
+        agents = AgentStore.all()
+        for agent in agents:
+            if agent.dedup_hashs is not None:
+                agent.dedup_hashs = []
+                agent.put()
+
 
 class AddAgent(BaseHandler):
     def get(self):
@@ -112,7 +123,8 @@ class AddAgent(BaseHandler):
             'URL Fetch Agent': URLFetchAgent,
             'Print Events Agent': PrintEventsAgent,
             'Mail Agent': EmailAgent,
-            'Webhook Agent': WebhookAgent
+            'Webhook Agent': WebhookAgent,
+            "Google Spreadsheet Agent": GoogleSpreadsheetAgent
         }
         agents = AgentStore.all()
         template = templates.get_template('add_agent.html')
@@ -125,19 +137,19 @@ class AddAgent(BaseHandler):
     def post(self):
         agent_type = self.request.get('agent_type')
         name = self.request.get('name')
-        sources = self.request.get('sources')
+        sources = self.request.get_all('sources')
         config = self.request.get('config')
+        deduplicate_output_events = self.request.get('deduplicate_output_events') == "1"
+        if not config or len(config) == 0:
+            config = "{}"
         config = json.loads(config)
-        sources = sources.split(',')
-        sources = [s.strip() for s in sources]
-        source_agents = AgentStore.query(
-            AgentStore.name.IN(sources),
-            AgentStore.is_active == True
-        ).fetch()
+        source_keys = [ndb.Key(urlsafe=source) for source in sources]
+        source_agents = ndb.get_multi(source_keys)
         agent_cls = cls_from_name(agent_type)
         agent = agent_cls.new(name,
                               source_agents=source_agents,
-                              config=config)
+                              config=config,
+                              deduplicate_output_events=deduplicate_output_events)
         template = templates.get_template('add_agent.html')
         return self.response.out.write(template.render({
             'agent': agent,
@@ -149,4 +161,5 @@ app = webapp2.WSGIApplication([
     ('/muninn/admin/agents/all/run/?', RunAllAgents),
     ('/muninn/admin/agents/all/?', ListAllAgents),
     ('/muninn/admin/agents/add/?', AddAgent),
+    ('/muninn/admin/agents/reset_dedup/?', ResetDedupHandler),
 ], debug=True)

@@ -18,12 +18,12 @@ except ImportError:
 from xml.etree import ElementTree
 
 from . import __version__
-from ns import _ns
-from httpsession import HTTPSession, HTTPError
-from models import Spreadsheet
-from urls import construct_url
-from utils import finditem
-from exceptions import (AuthenticationError, SpreadsheetNotFound,
+from .ns import _ns
+from .httpsession import HTTPSession, HTTPError
+from .models import Spreadsheet
+from .urls import construct_url
+from .utils import finditem
+from .exceptions import (AuthenticationError, SpreadsheetNotFound,
                          NoValidUrlKeyFound, UpdateCellError,
                          RequestError)
 

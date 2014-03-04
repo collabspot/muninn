@@ -1,4 +1,7 @@
+import logging
 from lib import add_lib_path
+from muninn.utils import slugify, force_unicode
+
 add_lib_path()
 
 import gspread
@@ -6,6 +9,15 @@ from muninn.agents import Agent
 
 
 class GoogleSpreadsheetAgent(Agent):
+    """
+    Example of configuration:
+    {
+        "login": "jeremi@collabspot.com",
+        "password": "MY_PWD",
+        "spreadsheet_key": "1pygz4jIJgAtUOkTAN8cUReWFwbJuF4W8bL13MKFXIZY"
+    }
+
+    """
 
     def run(self, events):
         config = self.config
@@ -14,4 +26,9 @@ class GoogleSpreadsheetAgent(Agent):
         sheet = gc.open_by_key(config.get("spreadsheet_key"))
         worksheet = sheet.get_worksheet(config.get("worksheet", 0))
         for record in worksheet.get_all_records():
-            self.store.add_event(record)
+            updated_records = {}
+            #
+            for key, value in record.items():
+                updated_records[slugify(force_unicode(key))] = force_unicode(value)
+
+            self.store.add_event(updated_records)

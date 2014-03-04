@@ -8,16 +8,19 @@ This module contains common spreadsheets' models
 
 """
 
+
 import re
 from collections import defaultdict
 from itertools import chain
+
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 
 from .ns import _ns, _ns1, ATOM_NS, BATCH_NS, SPREADSHEET_NS
 from .urls import construct_url
 from .utils import finditem, numericise_all
-from exceptions import IncorrectCellLabel, WorksheetNotFound, CellNotFound
+
+from .exceptions import IncorrectCellLabel, WorksheetNotFound, CellNotFound
 
 
 try:

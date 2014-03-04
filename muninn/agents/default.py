@@ -132,14 +132,25 @@ class WebhookAgent(Agent, ReadFormat):
 
 
 class EmailAgent(Agent):
+    """
+        Example of configuration:
+        {
+            "template_message": "Will need to put something clever here",
+            "template_subject": "What the team did yesterday",
+            "sender": "jane@example.com",
+            "to": "john@example.com",
+            "digest": 1
+        }
+    """
+
     can_generate_events = False
 
     def _send(self, data):
         config = self.config
         body = Template(config.get("template_message")).render(data=data)
         subject = Template(config.get("template_subject", "New events")).render(data=data)
-        mail.send_mail(sender=config.get("sender", "jeremi@collabspot.com"),
-                       to=config.get("to", "john@collabspot.com"),
+        mail.send_mail(sender=config.get("sender"),
+                       to=config.get("to"),
                        subject=subject,
                        body=body)
 
@@ -149,6 +160,9 @@ class EmailAgent(Agent):
         if is_digest:
             data = [event.data for event in events]
             self._send(data)
+            for event in events:
+                event.done()
         else:
             for event in events:
                 self._send(event.data)
+                event.done()

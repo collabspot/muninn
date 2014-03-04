@@ -17,13 +17,13 @@ class Agent(object):
         self.config = agent.config or {}
 
     @classmethod
-    def new(cls, name, schedule=60, config=None, source_agents=None):
+    def new(cls, name, schedule=60, config=None, source_agents=None, deduplicate_output_events=False):
         if config is None:
             config = {}
         return AgentStore.new(
             name, cls, schedule,
             source_agents=source_agents,
-            config=config)
+            config=config, deduplicate_output_events=deduplicate_output_events)
 
     def run(self, events):
         '''
