@@ -63,23 +63,19 @@ class AgentStoreTestCase(unittest.TestCase):
                          [source_agent1, source_agent2])
 
     def test_agent_due(self):
-        agent1 = TestAgent.new('Agent 1', schedule=120)
-        agent2 = TestAgent.new('Agent 1', schedule=180)
-        agent3 = TestAgent.new('Agent 1', schedule=500)
-        d1 = datetime.datetime.now() + datetime.timedelta(seconds=180)
-        d2 = datetime.datetime.now() + datetime.timedelta(seconds=499)
-        d3 = datetime.datetime.now() + datetime.timedelta(seconds=500)
+        in_two_hours = datetime.datetime.now() + datetime.timedelta(hours=2)
+
+        agent1 = TestAgent.new('Agent 1', cron_entry='*/10 * * * *')
+        agent2 = TestAgent.new('Agent 2', cron_entry='%s %s * * *' % (in_two_hours.minute, in_two_hours.hour))
+        d1 = datetime.datetime.now() + datetime.timedelta(seconds=601)
+        d2 = datetime.datetime.now() + datetime.timedelta(hours=3)
+        d3 = datetime.datetime.now() - datetime.timedelta(seconds=10)
         a1 = AgentStore.due(d1)
         a2 = AgentStore.due(d2)
         a3 = AgentStore.due(d3)
-        self.assertEqual(len(a1), 2)
+        self.assertEqual(len(a1), 1)
         self.assertEqual(len(a2), 2)
-        self.assertEqual(len(a3), 3)
-        agent1.is_active = False
-        agent1.put()
-        self.assertEqual(len(AgentStore.due(d3)), 2)
-        agent3.run_taskqueue(queue_name='default')
-        self.assertEqual(len(AgentStore.due(d3)), 1)
+        self.assertEqual(len(a3), 0)
 
     def test_agent_run(self):
         source_agent1 = TestAgent.new('Source Agent 1')
