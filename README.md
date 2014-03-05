@@ -1,6 +1,6 @@
 muninn - alpha
 ======
-[![Build Status](https://api.travis-ci.org/collabspot/muninn.png?branch=master)](https://api.travis-ci.org/collabspot/muninn)
+[![Build Status](https://api.travis-ci.org/collabspot/muninn.png?branch=master)](https://travis-ci.org/collabspot/muninn)
 
 
 This project was inspired by https://github.com/cantino/huginn/
