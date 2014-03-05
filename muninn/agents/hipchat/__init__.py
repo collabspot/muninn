@@ -17,3 +17,4 @@ class HipchatAgent(Agent):
         for event in events:
             message = template.render(data=event.data)
             hipster.message_room(config.get("room_id"), config.get("sender", 'Munnin'), message)
+            event.done()
