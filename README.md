@@ -9,5 +9,4 @@ This project is unstable, and the agent API might be changed at anytime before w
 
 TODO
 ----
-
-- Scheduling
+see issues tracker
