@@ -8,6 +8,7 @@ import jinja2
 
 from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent
 from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
+from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore, cls_from_name
 
 
@@ -120,11 +121,12 @@ class AddAgent(BaseHandler):
     def get(self):
         # TODO: don't hard code this dict
         registered_agents = {
-            'URL Fetch Agent': URLFetchAgent,
-            'Print Events Agent': PrintEventsAgent,
-            'Mail Agent': EmailAgent,
-            'Webhook Agent': WebhookAgent,
-            "Google Spreadsheet Agent": GoogleSpreadsheetAgent
+            'URL Fetch': URLFetchAgent,
+            'Print Events console': PrintEventsAgent,
+            'Mail': EmailAgent,
+            'Webhook': WebhookAgent,
+            "Google Spreadsheet": GoogleSpreadsheetAgent,
+            "Hipchat": HipchatAgent
         }
         agents = AgentStore.all()
         template = templates.get_template('add_agent.html')
