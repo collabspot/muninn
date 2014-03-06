@@ -7,6 +7,7 @@ import logging
 from importlib import import_module
 from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
+from google.appengine.api import memcache
 import json
 from crontab import CronTab
 
@@ -23,13 +24,11 @@ class AgentStore(ndb.Model):
     is_active = ndb.BooleanProperty(default=True)
     last_run = ndb.DateTimeProperty()
     next_run = ndb.DateTimeProperty()
-    #schedule = ndb.IntegerProperty()
     cron_entry = ndb.StringProperty()
     config = ndb.JsonProperty()
     dedup_hashs = ndb.JsonProperty()
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
-    is_running = ndb.BooleanProperty(default=False)
     deduplicate_output_events = ndb.BooleanProperty(default=False)
 
 
@@ -80,7 +79,6 @@ class AgentStore(ndb.Model):
     def due(cls, time):
         agents = cls.query(
             cls.next_run <= time,
-            cls.is_running == False,
             cls.is_active == True
         ).fetch()
         return agents
@@ -111,10 +109,6 @@ class AgentStore(ndb.Model):
                               target=agent.key)
                 events.append(event)
         ndb.put_multi(events)
-
-        if self.deduplicate_output_events and len(events):
-            #making sure we save the hashes
-            self.put()
 
         self._new_events_queue = []
 
@@ -166,21 +160,24 @@ class AgentStore(ndb.Model):
         '''
         if not self.is_active:
             return
-        self.is_running = True
-        try:
-            agent_cls = cls_from_name(self.type)
-            events = self.receive_events()
-            self._new_events_queue = []
-            agent = agent_cls(self)
-            result = agent.run(events)
-            if result is not None:
-                self.add_event(result)
-            self._put_events_queue()
-        finally:
-            self.last_run = datetime.datetime.now()
-            self.is_running = False
-            self._update_next_run()
-            self.put()
+        #we skip running the agent if it is already running
+        if memcache.add("%s_running" % self.key.id(), 1):
+            try:
+                agent_cls = cls_from_name(self.type)
+                events = self.receive_events()
+                self._new_events_queue = []
+                agent = agent_cls(self)
+                result = agent.run(events)
+                if result is not None:
+                    self.add_event(result)
+                self._put_events_queue()
+            finally:
+                self.last_run = datetime.datetime.now()
+                self._update_next_run()
+                self.put()
+                memcache.delete("%s_running" % self.key.id())
+        else:
+            logging.info("skip, already running")
 
     def receive_webhook(self, request, response):
         '''
@@ -190,8 +187,6 @@ class AgentStore(ndb.Model):
             response.set_status(404)
             return
 
-        self.is_running = True
-        self.put()
         try:
             agent_cls = cls_from_name(self.type)
             self._new_events_queue = []
@@ -199,12 +194,9 @@ class AgentStore(ndb.Model):
             agent.receive_webhook(request, response)
         finally:
             self.last_run = datetime.datetime.now()
-            self.is_running = False
             self.put()
 
     def run_taskqueue(self, queue_name='agents'):
-        self.is_running = True
-        self.put()
         task = taskqueue.add(
             url='/cron/agents/%s/run' % self.key.urlsafe(),
             method='get',
