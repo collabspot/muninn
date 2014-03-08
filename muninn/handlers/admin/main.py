@@ -108,6 +108,10 @@ class ListAllAgents(BaseHandler):
         template = templates.get_template('list_all_agents.html')
         return self.response.out.write(template.render({'agents': agents, 'page_title': 'All Agents'}))
 
+class RedirectHandler(BaseHandler):
+    def get(self):
+        self.redirect("/admin/")
+
 class ResetDedupHandler(BaseHandler):
     def get(self):
         agents = AgentStore.all()
@@ -161,9 +165,9 @@ class AddAgent(BaseHandler):
         }))
 
 app = webapp2.WSGIApplication([
-    ('/muninn/admin/agents/test/?', TestAgents),
-    ('/muninn/admin/agents/all/run/?', RunAllAgents),
-    ('/muninn/admin/agents/all/?', ListAllAgents),
-    ('/muninn/admin/agents/add/?', AddAgent),
-    ('/muninn/admin/agents/reset_dedup/?', ResetDedupHandler),
+    ('/admin/run/?', RunAllAgents),
+    ('/admin/?', ListAllAgents),
+    ('/admin/add/?', AddAgent),
+    ('/admin/reset_dedup/?', ResetDedupHandler),
+    ('/', RedirectHandler),
 ], debug=True)
