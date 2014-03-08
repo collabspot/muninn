@@ -1,4 +1,4 @@
 cron:
 - description: Run agents
   url: /cron/agents/run/
-  schedule: every 1 mins
+  schedule: every 2 mins

@@ -11,6 +11,7 @@ from google.appengine.api import memcache
 import json
 from crontab import CronTab
 
+ON_NEW_EVENT = "ON_NEW_EVENT"
 
 def cls_from_name(name):
     parts = name.rsplit('.', 1)
@@ -30,7 +31,7 @@ class AgentStore(ndb.Model):
     can_receive_events = ndb.BooleanProperty(default=True)
     can_generate_events = ndb.BooleanProperty(default=True)
     deduplicate_output_events = ndb.BooleanProperty(default=False)
-
+    child_agent_to_execute = None
 
     def __init__(self, **kwargs):
         self._new_events_queue = []
@@ -79,6 +80,7 @@ class AgentStore(ndb.Model):
     def due(cls, time):
         agents = cls.query(
             cls.next_run <= time,
+            cls.next_run > time - datetime.timedelta(days=7), #go max 7 days max
             cls.is_active == True
         ).fetch()
         return agents
@@ -108,7 +110,10 @@ class AgentStore(ndb.Model):
                               source=self.key,
                               target=agent.key)
                 events.append(event)
+
         ndb.put_multi(events)
+        if len(events):
+            self.child_agent_to_execute = [agent for agent in listening_agents if agent.cron_entry == ON_NEW_EVENT]
 
         self._new_events_queue = []
 
@@ -126,9 +131,9 @@ class AgentStore(ndb.Model):
         else:
             self.dedup_hashs.append(ev_hash)
             return False
+
     def _update_next_run(self):
-        logging.info("_update_next_run: '%s'" % (self.cron_entry, ))
-        if self.cron_entry is None or len(self.cron_entry) == 0:
+        if self.cron_entry is None or len(self.cron_entry) == 0 or self.cron_entry == ON_NEW_EVENT:
             self.next_run = None
             return
 
@@ -154,10 +159,11 @@ class AgentStore(ndb.Model):
         '''
         self._new_events_queue.append(data)
 
-    def run(self):
+    def run(self, execute_child=True):
         '''
         Run this agent's logic
         '''
+        logging.info("Running %s" % self.name)
         if not self.is_active:
             return
         #we skip running the agent if it is already running
@@ -176,6 +182,10 @@ class AgentStore(ndb.Model):
                 self._update_next_run()
                 self.put()
                 memcache.delete("%s_running" % self.key.id())
+
+            if execute_child and self.child_agent_to_execute is not None:
+                for agent in self.child_agent_to_execute:
+                    agent.run_taskqueue()
         else:
             logging.info("skip, already running")
 

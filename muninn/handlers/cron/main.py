@@ -3,6 +3,7 @@ import datetime
 import webapp2
 
 from google.appengine.ext import ndb
+from muninn import models
 from muninn.models import AgentStore
 
 
@@ -15,7 +16,8 @@ class RunAgents(BaseHandler):
         now = datetime.datetime.now()
         agents = AgentStore.due(now)
         for agent in agents:
-            agent.run_taskqueue()
+            if not agent.cron_entry == models.ON_NEW_EVENT:
+                agent.run_taskqueue()
 
 
 class RunAgentTaskHandler(BaseHandler):

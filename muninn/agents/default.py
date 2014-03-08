@@ -103,6 +103,7 @@ class PrintEventsAgent(Agent):
     def run(self, events):
         for event in events:
             logging.info(event.data)
+            event.done()
 
 
 class WebhookAgent(Agent, ReadFormat):
