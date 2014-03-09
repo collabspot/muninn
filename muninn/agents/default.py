@@ -12,10 +12,24 @@ import jsonpath
 from muninn.agents import Agent
 from pyquery import PyQuery as pq
 
+import requests
+
 urlfetch.set_default_fetch_deadline(30)
 
 
 class ReadFormat(object):
+
+    def get_value(self, key, obj):
+        val = self.config.get(key)
+
+        return self.render_value(val, obj)
+
+    def render_value(self, val, obj):
+        if obj is None or ("{{" not in val and "{%" not in val):
+            return val
+        return Template(val).render(event=obj)
+
+
     def _read_json(self, content, config):
         data = json.loads(content)
         responses = []
@@ -40,47 +54,70 @@ class ReadFormat(object):
                     responses.append(response)
             return responses
 
-    def _read_xml(cls, content, config, parser="html"):
+    def _read_xml(self, content, config, parser="html", event=None):
         doc = pq(content, parser=parser)
         responses = []
         extract_config = config["extract"]
 
         tmp_responses = {}
         for key, config in extract_config.items():
-            els = doc(config['selector'])
-            tmp_response = []
-            for el in els:
-                if 'text' in config:
-                    tmp_response.append(el.text())
-                elif 'html' in config:
-                    tmp_response.append(el.html())
-                elif 'attr' in config:
-                    tmp_response.append(el.attrib[config["attr"]])
-                else:
-                    #we default on text
-                    tmp_response.append(el.text())
-            tmp_responses[key] = tmp_response
+            if 'selector' in config:
+                els = doc(config['selector'])
+                tmp_response = []
+                for el in els:
+                    if 'text' in config:
+                        tmp_response.append(el.text())
+                    elif 'html' in config:
+                        tmp_response.append(el.html())
+                    elif 'attr' in config:
+                        tmp_response.append(el.attrib[config["attr"]])
+                    else:
+                        #we default on text
+                        tmp_response.append(el.text())
+                tmp_responses[key] = tmp_response
+            elif 'static' in config:
+                tmp_responses[key] = self.render_value(config['static'], event)
 
         keys = tmp_responses.keys()
 
-        if len(keys) > 0 and len(tmp_responses[keys[0]]):
-            for i in range(0, len(tmp_responses[keys[0]])):
+        if len(keys) > 0:
+            #we do not want to check static fields
+            first_non_static = None
+            for key in keys:
+                if type(tmp_responses[key]) is list:
+                    first_non_static = tmp_responses[key]
+                    break
+
+            for i in range(0, len(first_non_static)):
                 response = dict()
                 for key in keys:
-                    response[key] = tmp_responses[key][i]
+                    if type(tmp_responses[key]) is list:
+                        response[key] = tmp_responses[key][i]
+                    else:
+                        response[key] = tmp_responses[key]
                 responses.append(response)
         return responses
 
 
 class URLFetchAgent(Agent, ReadFormat):
 
-    def run(self, events):
+    def do_request(self, event=None):
         config = self.config
-        method = urlfetch.GET if config.get("method", "GET").upper() == "GET" else urlfetch.POST
+        method = config.get("method", "GET").upper()
         response_kind = config.get("type", "JSON").upper()
+        kwargs = {}
 
-        result = urlfetch.fetch(url=config["url"],
-                                method=method)
+        if "params" in config:
+            kwargs["params"] = {}
+            for key in config['params'].keys():
+                kwargs["params"][key] = self.get_value(key, config['params'])
+
+        if "headers" in config:
+            kwargs["headers"] = {}
+            for key in config['headers'].keys():
+                kwargs["headers"][key] = self.get_value(key, config['headers'])
+
+        result = requests.request(method, self.get_value("url", event), **kwargs)
 
         if result.status_code != 200:
             logging.error('FETCH failed: %s' % result.status_code)
@@ -89,11 +126,29 @@ class URLFetchAgent(Agent, ReadFormat):
         if response_kind == "JSON":
             new_events = self._read_json(result.content, config)
         elif response_kind == "XML":
-            new_events = self._read_xml(result.content, config, parser="xml")
+            new_events = self._read_xml(result.content, config, parser="xml", event=event)
         else:
-            new_events = self._read_xml(result.content, config, parser="html")
+            new_events = self._read_xml(result.content, config, parser="html", event=event)
 
         for event in new_events:
+            self.store.add_event(event)
+
+    def run(self, events):
+        if len(events) == 0:
+            self.do_request()
+        else:
+            for event in events:
+                self.do_request(event.data)
+                event.done()
+
+
+class EventGeneratorAgent(Agent):
+    can_receive_events = False
+
+    def run(self, events):
+        config = self.config
+
+        for event in config["events"]:
             self.store.add_event(event)
 
 

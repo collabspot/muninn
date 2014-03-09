@@ -2,8 +2,6 @@ handlers:
 - url: /static
   static_dir: static
 
-
-
 - url: /admin/.*
   script: muninn.handlers.admin.main.app
   login: admin
@@ -11,7 +9,6 @@ handlers:
   script: muninn.handlers.webhook.app
 - url: /cron/.*
   script: muninn.handlers.cron.main.app
-
 
 - url: /
   script: muninn.handlers.admin.main.app

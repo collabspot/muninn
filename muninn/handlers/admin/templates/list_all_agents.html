@@ -28,7 +28,7 @@
                             <td>{{ agent.name }}</td>
                             <td>{{ agent.cron_entry }}</td>
                             <td>{{ agent.last_run }}</td>
-                            <td>{{ agent.next_run }}</td>
+                            <td>{{ agent.next_run }} (<a href="/cron/agents/{{ agent.key.urlsafe() }}/run/">Run</a>)</td>
                             <td>{{ agent.receive_events()|length }}</td>
                         </tr>
                     {% endfor %}

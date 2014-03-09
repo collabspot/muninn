@@ -6,7 +6,7 @@ from google.appengine.ext import ndb
 import webapp2
 import jinja2
 
-from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent
+from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent, EventGeneratorAgent
 from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
 from muninn.agents.hipchat import HipchatAgent
 from muninn.models import AgentStore, cls_from_name
@@ -130,7 +130,8 @@ class AddAgent(BaseHandler):
             'Mail': EmailAgent,
             'Webhook': WebhookAgent,
             "Google Spreadsheet": GoogleSpreadsheetAgent,
-            "Hipchat": HipchatAgent
+            "Hipchat": HipchatAgent,
+            "Event Generator": EventGeneratorAgent
         }
         agents = AgentStore.all()
         template = templates.get_template('add_agent.html')
