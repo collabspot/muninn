@@ -100,7 +100,6 @@ class ReadFormat(object):
 
 
 class URLFetchAgent(Agent, ReadFormat):
-
     def do_request(self, event=None):
         config = self.config
         method = config.get("method", "GET").upper()

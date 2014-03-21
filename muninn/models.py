@@ -288,3 +288,8 @@ class SourceAgent(ndb.Model):
         ).fetch()
         keys = [a.source for a in agents]
         return ndb.get_multi(keys)
+
+class Credential(ndb.Model):
+    name = ndb.StringProperty()
+    credential_type = ndb.StringProperty()
+    data = ndb.JsonProperty()

@@ -9,7 +9,9 @@ handlers:
   script: muninn.handlers.webhook.app
 - url: /cron/.*
   script: muninn.handlers.cron.main.app
-
+- url: /oauth/.*
+  script: muninn.handlers.oauth_endpoints.main.app
+  login: admin
 - url: /
   script: muninn.handlers.admin.main.app
   login: admin

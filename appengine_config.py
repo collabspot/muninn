@@ -1,3 +1,6 @@
+from lib import add_lib_path
+add_lib_path()
+
 
 def webapp_add_wsgi_middleware(app):
   from google.appengine.ext.appstats import recording

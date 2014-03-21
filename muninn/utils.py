@@ -31,3 +31,9 @@ def force_unicode(s, encoding='utf-8', strings_only=False, errors='strict'):
     elif not isinstance(s, unicode):
         s = unicode(s, encoding, errors)
     return s
+
+
+def force_str(src):
+    if src is None:
+        src = ''
+    return src.encode('utf8') if isinstance(src, unicode) else src
