@@ -25,7 +25,7 @@
                     {% for agent in agents %}
                         <tr>
                             <td>{{ agent.key.id() }}</td>
-                            <td>{{ agent.name }}</td>
+                            <td><a href="/admin/{{ agent.key.urlsafe() }}/details/">{{ agent.name }}</a></td>
                             <td>{{ agent.cron_entry }}</td>
                             <td>{{ agent.last_run }}</td>
                             <td>{{ agent.next_run }} (<a href="/cron/agents/{{ agent.key.urlsafe() }}/run/">Run</a>)</td>

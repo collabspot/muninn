@@ -9,6 +9,7 @@ import jinja2
 from muninn.agents.default import EmailAgent, URLFetchAgent, PrintEventsAgent, WebhookAgent, EventGeneratorAgent
 from muninn.agents.google_spreadsheet import GoogleSpreadsheetAgent
 from muninn.agents.hipchat import HipchatAgent
+from muninn.agents.twitter import TwitterAgent
 from muninn.models import AgentStore, cls_from_name
 
 
@@ -108,6 +109,11 @@ class ListAllAgents(BaseHandler):
         template = templates.get_template('list_all_agents.html')
         return self.response.out.write(template.render({'agents': agents, 'page_title': 'All Agents'}))
 
+class AgentDetailsHandler(BaseHandler):
+    def get(self, key):
+        agent = ndb.Key(urlsafe=str(key)).get()
+        self.response.write(json.dumps(agent.config, indent=4))
+
 class RedirectHandler(BaseHandler):
     def get(self):
         self.redirect("/admin/")
@@ -131,6 +137,7 @@ class AddAgent(BaseHandler):
             'Webhook': WebhookAgent,
             "Google Spreadsheet": GoogleSpreadsheetAgent,
             "Hipchat": HipchatAgent,
+            "Twitter": TwitterAgent,
             "Event Generator": EventGeneratorAgent
         }
         agents = AgentStore.all()
@@ -170,5 +177,7 @@ app = webapp2.WSGIApplication([
     ('/admin/?', ListAllAgents),
     ('/admin/add/?', AddAgent),
     ('/admin/reset_dedup/?', ResetDedupHandler),
+    ('/admin/(.*)/details/', AgentDetailsHandler),
+
     ('/', RedirectHandler),
 ], debug=True)
