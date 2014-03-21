@@ -66,14 +66,14 @@ class ReadFormat(object):
                 tmp_response = []
                 for el in els:
                     if 'text' in config:
-                        tmp_response.append(el.text())
+                        tmp_response.append(el.text)
                     elif 'html' in config:
                         tmp_response.append(el.html())
                     elif 'attr' in config:
                         tmp_response.append(el.attrib[config["attr"]])
                     else:
                         #we default on text
-                        tmp_response.append(el.text())
+                        tmp_response.append(el.text)
                 tmp_responses[key] = tmp_response
             elif 'static' in config:
                 tmp_responses[key] = self.render_value(config['static'], event)
